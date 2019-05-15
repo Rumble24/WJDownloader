@@ -6,14 +6,17 @@
 //  Copyright © 2019 王景伟. All rights reserved.
 //
 ///> 1.断网续传功能   2.杀死重传功能  3.批量下载功能   4.
+///> taskIdentifier  和下载的进度是一一对应的
 
 #import "HJDownLoadManager.h"
 
-@interface HJDownLoadManager ()<NSURLSessionDelegate>
+@interface HJDownLoadManager ()<NSURLSessionDelegate,NSURLSessionDownloadDelegate>
 
 @property (nonatomic, strong) NSURLSession *session;
 
 @property (nonatomic, strong) NSOperationQueue *delegateQueue;
+
+@property (nonatomic, strong) NSMutableArray *downloadingArr;
 
 @end
 
@@ -33,6 +36,14 @@
     
     ///> 设置为可以后台下载
     NSURLSessionConfiguration *config = [NSURLSessionConfiguration backgroundSessionConfigurationWithIdentifier:@"com.hjDownLoadManager"];
+    
+    ///> https://www.jianshu.com/p/a8f1f7353e7f
+    ///> iOS对于同一个IP服务器的并发最大为4，OS X为6。即使设置很多的session也只是用一个
+    config.HTTPMaximumConnectionsPerHost = 1;
+    
+    ///> 允许蜂窝下载
+    config.allowsCellularAccess = YES;
+    
     ///> 意思是代理回调在 子线程中完成
     self.delegateQueue = [[NSOperationQueue alloc]init];
     self.delegateQueue.maxConcurrentOperationCount = 1;
@@ -40,7 +51,7 @@
     return self;
 }
 
-
+///> 需要判断任务的各种状态 是暂停状态 那么永远暂停   再次开启app也是暂停
 - (void)downLoadWithUrl:(NSString *)url {
     NSURLSessionDownloadTask *task = [self.session downloadTaskWithURL:[NSURL URLWithString:url]];
     ///> 开始任务

@@ -7,6 +7,9 @@
 //
 
 #import "AppDelegate.h"
+#import "ViewController.h"
+#import "TwoViewController.h"
+#import "DownloadedController.h"
 
 @interface AppDelegate ()
 
@@ -16,7 +19,29 @@
 
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
-    // Override point for customization after application launch.
+
+    // 将引导页设置为跟视图控制器
+    self.window = [[UIWindow alloc]initWithFrame:[[UIScreen mainScreen]bounds]];
+    self.window.backgroundColor = [UIColor whiteColor];
+    [self.window makeKeyAndVisible];
+    
+    ViewController *vc = [[ViewController alloc]init];
+    UINavigationController *naVc = [[UINavigationController alloc]initWithRootViewController:vc];
+    naVc.tabBarItem.title = @"显示";
+
+    TwoViewController *twoVc = [[TwoViewController alloc]init];
+    UINavigationController *tNavc = [[UINavigationController alloc]initWithRootViewController:twoVc];
+    tNavc.tabBarItem.title = @"下载中";
+    
+    DownloadedController *downloadedVc = [[DownloadedController alloc]init];
+    UINavigationController *downloadedNavc = [[UINavigationController alloc]initWithRootViewController:downloadedVc];
+    downloadedNavc.tabBarItem.title = @"已下载";
+    
+    UITabBarController *tabVc = [[UITabBarController alloc]init];
+    tabVc.viewControllers = @[naVc,tNavc,downloadedVc];
+    
+    self.window.rootViewController = tabVc;
+    
     return YES;
 }
 
