@@ -26,7 +26,7 @@
     self.window = [[UIWindow alloc]initWithFrame:[[UIScreen mainScreen]bounds]];
     self.window.backgroundColor = [UIColor whiteColor];
     [self.window makeKeyAndVisible];
-    
+        
     ViewController *vc = [[ViewController alloc]init];
     UINavigationController *naVc = [[UINavigationController alloc]initWithRootViewController:vc];
     naVc.tabBarItem.title = @"显示";
@@ -37,10 +37,10 @@
     
     DownloadedController *downloadedVc = [[DownloadedController alloc]init];
     UINavigationController *downloadedNavc = [[UINavigationController alloc]initWithRootViewController:downloadedVc];
-    downloadedNavc.tabBarItem.title = @"已下载";
+    downloadedVc.title = @"已下载";
     
     UITabBarController *tabVc = [[UITabBarController alloc]init];
-    tabVc.viewControllers = @[naVc,tNavc,downloadedVc];
+    tabVc.viewControllers = @[naVc,tNavc,downloadedNavc];
     
     self.window.rootViewController = tabVc;
     
@@ -82,5 +82,6 @@
     NSLog(@"%s",__func__);
 }
 
-
-@end
++ (AppDelegate*)sharedInstance {
+    return (AppDelegate*)[[UIApplication sharedApplication] delegate];
+}@end

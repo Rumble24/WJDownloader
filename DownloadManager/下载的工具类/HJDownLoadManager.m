@@ -11,7 +11,7 @@
 
 #import "HJDownLoadManager.h"
 
-@interface HJDownLoadManager ()<NSURLSessionDelegate,NSURLSessionDownloadDelegate>
+@interface HJDownLoadManager ()<NSURLSessionDelegate,NSURLSessionTaskDelegate,NSURLSessionDownloadDelegate>
 
 @property (nonatomic, strong) NSURLSession *session;
 
@@ -24,6 +24,8 @@
 @property (nonatomic, strong) NSData *resumeData;
 
 @property (nonatomic, strong) NSProgress *downloadProgress;
+
+@property (nonatomic, strong) CJDownloadModel *model;
 
 @end
 
@@ -41,6 +43,8 @@
 - (instancetype)init {
     self = [super init];
     
+    _downloadArr = [NSMutableArray array];
+    
     ///> 设置为可以后台下载
     NSURLSessionConfiguration *config = [NSURLSessionConfiguration backgroundSessionConfigurationWithIdentifier:@"com.hjDownLoadManager"];
     
@@ -55,52 +59,43 @@
     self.delegateQueue = [[NSOperationQueue alloc]init];
     self.delegateQueue.maxConcurrentOperationCount = 1;
     self.session = [NSURLSession sessionWithConfiguration:config delegate:self delegateQueue:self.delegateQueue];
-    
-    
-    _downloadProgress = [[NSProgress alloc] initWithParent:nil userInfo:nil];
-    
-    [_downloadProgress addObserver:self
-               forKeyPath:NSStringFromSelector(@selector(fractionCompleted))
-                  options:NSKeyValueObservingOptionNew
-                  context:NULL];
-    
-    _downloadProgress.totalUnitCount = NSURLSessionTransferSizeUnknown;
-    _downloadProgress.cancellable = YES;
-    _downloadProgress.cancellationHandler = ^{
-        [self.downloadTask cancel];
-    };
-    _downloadProgress.pausable = YES;
-    _downloadProgress.pausingHandler = ^{
-        [self.downloadTask suspend];
-    };
-#if AF_CAN_USE_AT_AVAILABLE
-    if (@available(iOS 9, macOS 10.11, *))
-#else
-        if ([_downloadProgress respondsToSelector:@selector(setResumingHandler:)])
-#endif
-        {
-            _downloadProgress.resumingHandler = ^{
-                [self.downloadTask resume];
-            };
-        }
+
     return self;
-}
-
-- (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary<NSString *,id> *)change context:(void *)context {
-    if ([object isEqual:self.downloadProgress]) {
-        NSLog(@"------ ---- ");
-    }
-
 }
 
 
 ///> 需要判断任务的各种状态 是暂停状态 那么永远暂停   再次开启app也是暂停
-- (void)downLoadWithUrl:(NSString *)url {
-    self.downloadTask = [self.session downloadTaskWithURL:[NSURL URLWithString:url]];
-    ///> 开始任务
-    [self.downloadTask resume];
+- (void)downLoadWithModel:(CJDownloadModel *)model {
+    
+    if ([self downloadArrContainsModel:model]) {
+        NSLog(@"已经存在在下载列表中");
+        return;
+    }
+    
+    self.downloadTask = [self.session downloadTaskWithURL:[NSURL URLWithString:model.downloadStr]];
+    model.downloadTask = self.downloadTask;
+
+    if (self.downloadArr.count == 0) {
+        model.downloadState = CJDownloading;
+        [model.downloadTask resume];
+        self.model = model;
+        NSLog(@"开始下载 %zd",self.downloadTask.taskIdentifier);
+    } else {
+        NSLog(@"加入下载队列 %zd",model.downloadTask.taskIdentifier);
+    }
+    
+    [self.downloadArr addObject:model];
 }
 
+
+- (BOOL)downloadArrContainsModel:(CJDownloadModel *)model {
+    for (CJDownloadModel *aModel in self.downloadArr) {
+        if ([model.downloadStr isEqualToString:aModel.downloadStr]) {
+            return YES;
+        }
+    }
+    return NO;
+}
 
 #pragma mark - NSURLSessionDelegate 会话失效 失败或者c完成回调方法 如果您调用invalidateAndCancel方法会话将立即调用此委托方法
 - (void)URLSession:(NSURLSession *)session didBecomeInvalidWithError:(nullable NSError *)error {
@@ -142,7 +137,18 @@
 #pragma mark - NSURLSessionDownloadDelegate
 ///> 下载完成
 - (void)URLSession:(NSURLSession *)session downloadTask:(NSURLSessionDownloadTask *)downloadTask didFinishDownloadingToURL:(NSURL *)location {
-    NSLog(@"下载完成 %@",location.absoluteString);
+    NSLog(@"下载完成 %zd %@",self.downloadTask.taskIdentifier,location.absoluteString);
+    
+    self.model.downloadedUrl = location;
+    self.model.downloadState = CJDownloaded;
+    [self.downloadedArr addObject:self.model];
+    
+    [self.downloadArr removeObject:self.model];
+    if (self.downloadArr.count > 0) {
+        self.model = self.downloadArr[0];
+        [self.model.downloadTask resume];
+        NSLog(@"开始下载 %zd",self.downloadTask.taskIdentifier);
+    }
 }
 
 ///> 下载进度

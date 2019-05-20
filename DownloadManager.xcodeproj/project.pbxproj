@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		9B0FEAFC229243FE009E84A5 /* CJDownloadModel.m in Sources */ = {isa = PBXBuildFile; fileRef = 9B0FEAFB229243FE009E84A5 /* CJDownloadModel.m */; };
 		9B35480F2282C95A0048CD2C /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 9B35480E2282C95A0048CD2C /* AppDelegate.m */; };
 		9B3548122282C95A0048CD2C /* ViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 9B3548112282C95A0048CD2C /* ViewController.m */; };
 		9B3548152282C95A0048CD2C /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 9B3548132282C95A0048CD2C /* Main.storyboard */; };
@@ -45,6 +46,8 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		9B0FEAFA229243FE009E84A5 /* CJDownloadModel.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CJDownloadModel.h; sourceTree = "<group>"; };
+		9B0FEAFB229243FE009E84A5 /* CJDownloadModel.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CJDownloadModel.m; sourceTree = "<group>"; };
 		9B35480A2282C95A0048CD2C /* DownloadManager.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = DownloadManager.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		9B35480D2282C95A0048CD2C /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
 		9B35480E2282C95A0048CD2C /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
@@ -136,7 +139,7 @@
 				9B35480D2282C95A0048CD2C /* AppDelegate.h */,
 				9B35480E2282C95A0048CD2C /* AppDelegate.m */,
 				9B76CCF4228BB15300372D70 /* 显示页面 */,
-				9B76CCF5228BB16A00372D70 /* 正在下载页面 */,
+				9B76CCF5228BB16A00372D70 /* 正在下载和等待的页面 */,
 				9B76CCF7228BB8A600372D70 /* 下载完成页面 */,
 				9B76CCF6228BB17C00372D70 /* 下载的工具类 */,
 				9B76CCFB228BEBBC00372D70 /* AFNetworking */,
@@ -172,11 +175,13 @@
 			children = (
 				9B3548102282C95A0048CD2C /* ViewController.h */,
 				9B3548112282C95A0048CD2C /* ViewController.m */,
+				9B0FEAFA229243FE009E84A5 /* CJDownloadModel.h */,
+				9B0FEAFB229243FE009E84A5 /* CJDownloadModel.m */,
 			);
 			path = "显示页面";
 			sourceTree = "<group>";
 		};
-		9B76CCF5228BB16A00372D70 /* 正在下载页面 */ = {
+		9B76CCF5228BB16A00372D70 /* 正在下载和等待的页面 */ = {
 			isa = PBXGroup;
 			children = (
 				9B76CCEE228BA7FC00372D70 /* TwoViewController.h */,
@@ -184,7 +189,7 @@
 				9B76CCF1228BB14A00372D70 /* DownTableViewCell.h */,
 				9B76CCF2228BB14A00372D70 /* DownTableViewCell.m */,
 			);
-			path = "正在下载页面";
+			path = "正在下载和等待的页面";
 			sourceTree = "<group>";
 		};
 		9B76CCF6228BB17C00372D70 /* 下载的工具类 */ = {
@@ -357,6 +362,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				9B3548122282C95A0048CD2C /* ViewController.m in Sources */,
+				9B0FEAFC229243FE009E84A5 /* CJDownloadModel.m in Sources */,
 				9B35481D2282C95D0048CD2C /* main.m in Sources */,
 				9B35480F2282C95A0048CD2C /* AppDelegate.m in Sources */,
 				9B76CD0B228BEBBC00372D70 /* AFHTTPSessionManager.m in Sources */,

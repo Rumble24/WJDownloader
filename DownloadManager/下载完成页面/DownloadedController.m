@@ -16,9 +16,7 @@
 
 - (void)viewDidLoad {
     [super viewDidLoad];
-    self.view.backgroundColor = [UIColor whiteColor];
-    self.navigationItem.title = @"下载完成";
-    
+    self.view.backgroundColor = [UIColor lightGrayColor];    
 }
 
 /*

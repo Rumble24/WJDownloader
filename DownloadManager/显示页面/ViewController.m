@@ -7,46 +7,14 @@
 //
 
 #import "ViewController.h"
-#import "AFNetworking.h"
+#import "AppDelegate.h"
 #import "HJDownLoadManager.h"
+#import "CJDownloadModel.h"
+#import <objc/runtime.h>
 
-
-//推荐
-#define WJEssenceRecommendURL @"http://s.budejie.com/topic/list/jingxuan/1/bs0315-iphone-4.2/0-20.json"
-
-//视频
-#define WJEssenceVideoURL @"http://s.budejie.com/topic/list/jingxuan/41/bs0315-iphone-4.2/0-20.json"
-
-//图片
-#define WJEssencePictureURL @"http://s.budejie.com/topic/list/jingxuan/10/bs0315-iphone-4.2/0-20.json"
-
-//段子
-#define WJEssenceTextURL @"http://s.budejie.com/topic/tag-topic/64/hot/bs0315-iphone-4.2/0-20.json"
-
-//网红
-#define WJEssenceStartURL @"http://s.budejie.com/topic/tag-topic/3096/hot/bs0315-iphone-4.2/0-20.json"
-
-//排行
-#define WJEssenceListsURL @"http://s.budejie.com/topic/list/remen/1/bs0315-iphone-4.2/0-20.json"
-
-//社会
-#define WJEssenceSocietyURL @"http://s.budejie.com/topic/tag-topic/473/hot/bs0315-iphone-4.2/0-20.json"
-
-//美女
-#define WJEssenceGirlURL @"http://s.budejie.com/topic/tag-topic/117/hot/bs0315-iphone-4.2/0-20.json"
-
-//冷知识
-#define WJEssenceColdURL @"http://s.budejie.com/topic/tag-topic/3176/hot/bs0315-iphone-4.2/0-20.json"
-
-//游戏
-#define WJEssenceGameURL @"http://s.budejie.com/topic/tag-topic/164/hot/bs0315-iphone-4.2/0-20.json"
-
-@interface ViewController ()<UITableViewDelegate,UITableViewDataSource,NSURLSessionDelegate,NSURLSessionDownloadDelegate>
+@interface ViewController ()<UITableViewDelegate,UITableViewDataSource>
 @property (nonatomic, strong) UITableView *tableView;
-
 @property (nonatomic, strong) NSMutableArray *dataArr;
-
-@property (nonatomic, strong) AFHTTPSessionManager *manager;
 @end
 
 @implementation ViewController
@@ -94,28 +62,17 @@
     [_dataArr addObject:@{@"name":@"国家宝藏7",@"address":@"https://asp.cntv.myalicdn.com/asp/hls/450/0303000a/3/default/cf2d166ace774c438de09c99e2435d00/450.m3u8"}];
     [_dataArr addObject:@{@"name":@"国家宝藏8",@"address":@"https://asp.cntv.myalicdn.com/asp/hls/450/0303000a/3/default/50e4ec305ffb423bbe66f78d7dbc90d2/450.m3u8"}];
     [_dataArr addObject:@{@"name":@"国家宝藏9",@"address":@"https://asp.cntv.myalicdn.com/asp/hls/450/0303000a/3/default/d4cad7e4f0c14af19ae6b35ee6c85ab5/450.m3u8"}];
+    [_dataArr addObject:@{@"name":@"大文件",@"address":@"https://www.apple.com/105/media/cn/iphone-x/2017/01df5b43-28e4-4848-bf20-490c34a926a7/films/feature/iphone-x-feature-cn-20170912_1280x720h.mp4"}];
     
-    NSString *requestUrl = @"https://www.apple.com/105/media/cn/iphone-x/2017/01df5b43-28e4-4848-bf20-490c34a926a7/films/feature/iphone-x-feature-cn-20170912_1280x720h.mp4";
-    [[HJDownLoadManager sharedManager] downLoadWithUrl:requestUrl];
+    NSArray *arr = [NSArray arrayWithArray:_dataArr];
+    [_dataArr removeAllObjects];
     
-    
-    NSString *localPath = [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES) lastObject];
-    
-    
-    // 要检查的文件目录
-    NSString *filePath = [localPath  stringByAppendingPathComponent:@"Tiger_Trade_latest.dmg"];
-    NSURL *fileUrl = [NSURL fileURLWithPath:filePath isDirectory:NO];
-    NSURLRequest *request = [NSURLRequest requestWithURL:[NSURL URLWithString:requestUrl]];
-    NSURLSessionDownloadTask   *downloadTask = [[AFHTTPSessionManager manager]downloadTaskWithRequest:request progress:^(NSProgress * _Nonnull downloadProgress) {
-        NSLog(@"旧  %F",(1.0 * downloadProgress.completedUnitCount / downloadProgress.totalUnitCount));
-    } destination:^NSURL * _Nonnull(NSURL * _Nonnull targetPath, NSURLResponse * _Nonnull response) {
-        return fileUrl;
-    } completionHandler:^(NSURLResponse * _Nonnull response, NSURL * _Nullable filePath, NSError * _Nullable error) {
-        
-    }];
-    
-    [downloadTask resume];
-    
+    for (NSDictionary *dic in arr) {
+        CJDownloadModel *model = [CJDownloadModel new];
+        model.title = dic[@"name"];
+        model.downloadStr = dic[@"address"];
+        [_dataArr addObject:model];
+    }
 }
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
@@ -124,12 +81,15 @@
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
     UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:@"ShowTableViewCell" forIndexPath:indexPath];
-    NSDictionary *dic = _dataArr[indexPath.row];
-    cell.textLabel.text = dic[@"name"];
+    CJDownloadModel *model = _dataArr[indexPath.row];
+    cell.textLabel.text = model.title;
+    cell.detailTextLabel.text = @"点击下载";
     return cell;
 }
 
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
-    
+    CJDownloadModel *model = _dataArr[indexPath.row];
+    model.downloadState = CJDownloadWaiting;
+    [[HJDownLoadManager sharedManager] downLoadWithModel:model];
 }
 @end

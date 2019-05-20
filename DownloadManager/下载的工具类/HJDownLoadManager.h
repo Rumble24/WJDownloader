@@ -7,6 +7,7 @@
 //
 
 #import <Foundation/Foundation.h>
+#import "CJDownloadModel.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -14,9 +15,15 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property (nonatomic, copy) void (^backgroundSessionCompletionHandler)(void);
 
+///> 下载中的数组
+@property (strong, nonatomic) NSMutableArray *downloadArr;
+
+///> 已经下载的数组
+@property (strong, nonatomic) NSMutableArray *downloadedArr;
+
 + (instancetype)sharedManager;
 
-- (void)downLoadWithUrl:(NSString *)url;
+- (void)downLoadWithModel:(CJDownloadModel *)model;
 
 @end
 
