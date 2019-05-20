@@ -12,6 +12,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface HJDownLoadManager : NSObject
 
+@property (nonatomic, copy) void (^backgroundSessionCompletionHandler)(void);
+
 + (instancetype)sharedManager;
 
 - (void)downLoadWithUrl:(NSString *)url;
