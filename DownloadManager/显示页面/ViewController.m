@@ -38,6 +38,7 @@
     [self.view addSubview:_tableView];
     
     _dataArr = [NSMutableArray array];
+    [_dataArr addObject:@{@"name":@"大文件",@"address":@"https://www.apple.com/105/media/cn/iphone-x/2017/01df5b43-28e4-4848-bf20-490c34a926a7/films/feature/iphone-x-feature-cn-20170912_1280x720h.mp4"}];
     [_dataArr addObject:@{@"name":@"下载地址1",@"address":@"https://asp.cntv.myalicdn.com/asp/hls/450/0303000a/3/default/c68e967a22564821a430d21a75fcd34d/450.m3u8"}];
     [_dataArr addObject:@{@"name":@"下载地址2",@"address":@"https://asp.cntv.myalicdn.com/asp/hls/450/0303000a/3/default/8218d6ea28d34c00a25b112e40973241/450.m3u8"}];
     [_dataArr addObject:@{@"name":@"下载地址3",@"address":@"https://asp.cntv.myalicdn.com/asp/hls/450/0303000a/3/default/6a2785dbbc9d4e3d8760caf1f6878346/450.m3u8"}];
@@ -62,7 +63,6 @@
     [_dataArr addObject:@{@"name":@"国家宝藏7",@"address":@"https://asp.cntv.myalicdn.com/asp/hls/450/0303000a/3/default/cf2d166ace774c438de09c99e2435d00/450.m3u8"}];
     [_dataArr addObject:@{@"name":@"国家宝藏8",@"address":@"https://asp.cntv.myalicdn.com/asp/hls/450/0303000a/3/default/50e4ec305ffb423bbe66f78d7dbc90d2/450.m3u8"}];
     [_dataArr addObject:@{@"name":@"国家宝藏9",@"address":@"https://asp.cntv.myalicdn.com/asp/hls/450/0303000a/3/default/d4cad7e4f0c14af19ae6b35ee6c85ab5/450.m3u8"}];
-    [_dataArr addObject:@{@"name":@"大文件",@"address":@"https://www.apple.com/105/media/cn/iphone-x/2017/01df5b43-28e4-4848-bf20-490c34a926a7/films/feature/iphone-x-feature-cn-20170912_1280x720h.mp4"}];
     
     NSArray *arr = [NSArray arrayWithArray:_dataArr];
     [_dataArr removeAllObjects];

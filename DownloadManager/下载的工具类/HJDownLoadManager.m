@@ -11,22 +11,15 @@
 
 #import "HJDownLoadManager.h"
 
-@interface HJDownLoadManager ()<NSURLSessionDelegate,NSURLSessionTaskDelegate,NSURLSessionDownloadDelegate>
-
+@interface HJDownLoadManager ()<NSURLSessionDelegate,NSURLSessionDownloadDelegate>
+@property (nonatomic, strong) NSURLSessionConfiguration *sessionConfiguration;
 @property (nonatomic, strong) NSURLSession *session;
-
 @property (nonatomic, strong) NSURLSessionDownloadTask *downloadTask;
-
-@property (nonatomic, strong) NSOperationQueue *delegateQueue;
-
+@property (nonatomic, strong) NSOperationQueue *operationQueue;
 @property (nonatomic, strong) NSMutableArray *downloadingArr;
-
 @property (nonatomic, strong) NSData *resumeData;
-
 @property (nonatomic, strong) NSProgress *downloadProgress;
-
 @property (nonatomic, strong) CJDownloadModel *model;
-
 @end
 
 @implementation HJDownLoadManager
@@ -46,21 +39,27 @@
     _downloadArr = [NSMutableArray array];
     
     ///> 设置为可以后台下载
-    NSURLSessionConfiguration *config = [NSURLSessionConfiguration backgroundSessionConfigurationWithIdentifier:@"com.hjDownLoadManager"];
-    
+    self.sessionConfiguration = [NSURLSessionConfiguration backgroundSessionConfigurationWithIdentifier:@"com.hjDownLoadManager"];
     ///> https://www.jianshu.com/p/a8f1f7353e7f
     ///> iOS对于同一个IP服务器的并发最大为4，OS X为6。即使设置很多的session也只是用一个
-    config.HTTPMaximumConnectionsPerHost = 1;
-    
+    self.sessionConfiguration.HTTPMaximumConnectionsPerHost = 1;
     ///> 允许蜂窝下载
-    config.allowsCellularAccess = YES;
+    self.sessionConfiguration.allowsCellularAccess = YES;
     
     ///> 意思是代理回调在 子线程中完成
-    self.delegateQueue = [[NSOperationQueue alloc]init];
-    self.delegateQueue.maxConcurrentOperationCount = 1;
-    self.session = [NSURLSession sessionWithConfiguration:config delegate:self delegateQueue:self.delegateQueue];
+    self.operationQueue = [[NSOperationQueue alloc]init];
+    self.operationQueue.maxConcurrentOperationCount = 1;
 
     return self;
+}
+
+- (NSURLSession *)session {
+    @synchronized (self) {
+        if (!_session) {
+            _session = [NSURLSession sessionWithConfiguration:self.sessionConfiguration delegate:self delegateQueue:self.operationQueue];
+        }
+    }
+    return _session;
 }
 
 
@@ -72,7 +71,7 @@
         return;
     }
     
-    self.downloadTask = [self.session downloadTaskWithURL:[NSURL URLWithString:model.downloadStr]];
+    self.downloadTask = [self.session downloadTaskWithRequest:[NSURLRequest requestWithURL:[NSURL URLWithString:model.downloadStr]]];
     model.downloadTask = self.downloadTask;
 
     if (self.downloadArr.count == 0) {
@@ -113,7 +112,7 @@
 ///> 如果服务器要求验证客户端身份或向客户端提供其证书用于验证时，则会调用
 - (void)URLSession:(NSURLSession *)session didReceiveChallenge:(NSURLAuthenticationChallenge *)challenge
  completionHandler:(void (^)(NSURLSessionAuthChallengeDisposition disposition, NSURLCredential * _Nullable credential))completionHandler {
-    
+    NSLog(@"%s",__func__);
 }
 
 ///> 这个方法在我们写后台下载的Demo中我们是会遇到的
@@ -121,23 +120,98 @@
     if (self.backgroundSessionCompletionHandler) {
         self.backgroundSessionCompletionHandler();
     }
+    NSLog(@"%s",__func__);
 }
 
-//- (void)URLSession:(__unused NSURLSession *)session
-//          dataTask:(__unused NSURLSessionDataTask *)dataTask
-//    didReceiveData:(NSData *)data
-//{
-//    self.downloadProgress.totalUnitCount = dataTask.countOfBytesExpectedToReceive;
-//    self.downloadProgress.completedUnitCount = dataTask.countOfBytesReceived;
-//    
-//    [self.mutableData appendData:data];
-//}
+
+#pragma mark - NSURLSessionTaskDelegate
+- (void)URLSession:(NSURLSession *)session task:(NSURLSessionTask *)task willBeginDelayedRequest:(NSURLRequest *)request
+ completionHandler:(void (^)(NSURLSessionDelayedRequestDisposition disposition, NSURLRequest * _Nullable newRequest))completionHandler {
+    NSLog(@"%s",__func__);
+}
+
+///>告诉代理，在开始网络加载之前，任务正在等待，直到合适的连接可用。
+- (void)URLSession:(NSURLSession *)session taskIsWaitingForConnectivity:(NSURLSessionTask *)task {
+    NSLog(@"%s",__func__);
+}
+
+///>告诉委托远程服务器请求HTTP重定向。
+- (void)URLSession:(NSURLSession *)session task:(NSURLSessionTask *)task
+willPerformHTTPRedirection:(NSHTTPURLResponse *)response
+        newRequest:(NSURLRequest *)request
+ completionHandler:(void (^)(NSURLRequest * _Nullable))completionHandler {
+    NSLog(@"%s",__func__);
+}
+
+///>  响应来自远程服务器的认证请求，从代理请求凭证。
+- (void)URLSession:(NSURLSession *)session task:(NSURLSessionTask *)task
+didReceiveChallenge:(NSURLAuthenticationChallenge *)challenge
+ completionHandler:(void (^)(NSURLSessionAuthChallengeDisposition disposition, NSURLCredential * _Nullable credential))completionHandler {
+    NSLog(@"%s",__func__);
+}
+
+
+- (void)URLSession:(NSURLSession *)session task:(NSURLSessionTask *)task
+ needNewBodyStream:(void (^)(NSInputStream * _Nullable bodyStream))completionHandler {
+    NSLog(@"%s",__func__);
+}
+
+
+///>  定期通知代理向服务器发送主体内容的进度。(上传进度)
+- (void)URLSession:(NSURLSession *)session task:(NSURLSessionTask *)task
+   didSendBodyData:(int64_t)bytesSent
+    totalBytesSent:(int64_t)totalBytesSent
+totalBytesExpectedToSend:(int64_t)totalBytesExpectedToSend {
+    NSLog(@"%s",__func__);
+}
+
+///> 当task完成的时候调用
+- (void)URLSession:(NSURLSession *)session task:(NSURLSessionTask *)task
+didCompleteWithError:(nullable NSError *)error {
+    NSLog(@"%s",__func__);
+}
+
+
+#pragma mark - NSURLSessionDataDelegate
+///> 1.收到了相应头
+- (void)URLSession:(NSURLSession *)session dataTask:(NSURLSessionDataTask *)dataTask
+didReceiveResponse:(NSURLResponse *)response
+ completionHandler:(void (^)(NSURLSessionResponseDisposition disposition))completionHandler {
+    NSLog(@"收到了相应头");
+}
+
+///>  开始下载数据
+- (void)URLSession:(NSURLSession *)session dataTask:(NSURLSessionDataTask *)dataTask
+didBecomeDownloadTask:(NSURLSessionDownloadTask *)downloadTask {
+    NSLog(@"开始下载数据");
+}
+
+///> 告诉委托数据任务已更改为流任务
+- (void)URLSession:(NSURLSession *)session dataTask:(NSURLSessionDataTask *)dataTask
+didBecomeStreamTask:(NSURLSessionStreamTask *)streamTask {
+    NSLog(@"诉委托数据任务已更改为流任务");
+}
+
+
+///> 开始接收到数据
+- (void)URLSession:(NSURLSession *)session dataTask:(NSURLSessionDataTask *)dataTask
+    didReceiveData:(NSData *)data {
+    NSLog(@"开始接收到数据");
+}
+
+///> 存数据,这里可以使用系统默认的就行，这个是要将response缓存起来
+- (void)URLSession:(NSURLSession *)session dataTask:(NSURLSessionDataTask *)dataTask
+ willCacheResponse:(NSCachedURLResponse *)proposedResponse
+ completionHandler:(void (^)(NSCachedURLResponse * _Nullable cachedResponse))completionHandler {
+    NSLog(@"存数据,这里可以使用系统默认的就行，这个是要将response缓存起来");
+}
+
 
 
 #pragma mark - NSURLSessionDownloadDelegate
 ///> 下载完成
 - (void)URLSession:(NSURLSession *)session downloadTask:(NSURLSessionDownloadTask *)downloadTask didFinishDownloadingToURL:(NSURL *)location {
-    NSLog(@"下载完成 %zd %@",self.downloadTask.taskIdentifier,location.absoluteString);
+    NSLog(@"下载完成 %zd %@ downloadArr.count:%zd",self.downloadTask.taskIdentifier,location.absoluteString,self.downloadArr.count);
     
     self.model.downloadedUrl = location;
     self.model.downloadState = CJDownloaded;
