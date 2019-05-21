@@ -2,7 +2,7 @@
 //  ShowTableViewCell.h
 //  DownloadManager
 //
-//  Created by 王景伟 on 2019/5/15.
+//  Created by 王景伟 on 2019/5/21.
 //  Copyright © 2019 王景伟. All rights reserved.
 //
 
@@ -11,7 +11,7 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface DownTableViewCell : UITableViewCell
+@interface ShowTableViewCell : UITableViewCell
 
 @property (nonatomic, strong) CJDownloadModel *model;
 

@@ -11,9 +11,14 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+
+FOUNDATION_EXPORT NSString * const HJDownLoadManagerTaskDidCompleteNotification;
+
 @interface HJDownLoadManager : NSObject
 
 @property (nonatomic, copy) void (^backgroundSessionCompletionHandler)(void);
+
+@property (nonatomic, copy) void (^downloadProgressBlock)(float progress);
 
 ///> 下载中的数组
 @property (strong, nonatomic) NSMutableArray *downloadArr;
@@ -24,6 +29,7 @@ NS_ASSUME_NONNULL_BEGIN
 + (instancetype)sharedManager;
 
 - (void)downLoadWithModel:(CJDownloadModel *)model;
+
 
 @end
 
