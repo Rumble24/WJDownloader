@@ -71,13 +71,13 @@
         return;
     }
     
-    self.downloadTask = [self.session downloadTaskWithRequest:[NSURLRequest requestWithURL:[NSURL URLWithString:model.downloadStr]]];
-    model.downloadTask = self.downloadTask;
+    model.downloadTask = [self.session downloadTaskWithRequest:[NSURLRequest requestWithURL:[NSURL URLWithString:model.downloadStr]]];
 
     if (self.downloadArr.count == 0) {
+        self.model = model;
+        self.downloadTask = model.downloadTask;
         model.downloadState = CJDownloading;
         [model.downloadTask resume];
-        self.model = model;
         NSLog(@"开始下载 %zd",self.downloadTask.taskIdentifier);
     } else {
         NSLog(@"加入下载队列 %zd",model.downloadTask.taskIdentifier);
@@ -112,7 +112,7 @@
 ///> 如果服务器要求验证客户端身份或向客户端提供其证书用于验证时，则会调用
 - (void)URLSession:(NSURLSession *)session didReceiveChallenge:(NSURLAuthenticationChallenge *)challenge
  completionHandler:(void (^)(NSURLSessionAuthChallengeDisposition disposition, NSURLCredential * _Nullable credential))completionHandler {
-    NSLog(@"%s",__func__);
+    NSLog(@"NSURLSessionDelegate 服务器要求验证客户端身份 %s",__func__);
 }
 
 ///> 这个方法在我们写后台下载的Demo中我们是会遇到的
@@ -124,10 +124,50 @@
 }
 
 
+#pragma mark - NSURLSessionDownloadDelegate
+///> 下载完成
+- (void)URLSession:(NSURLSession *)session downloadTask:(NSURLSessionDownloadTask *)downloadTask didFinishDownloadingToURL:(NSURL *)location {
+    NSLog(@"下载完成 %zd %@ downloadArr.count:%zd",downloadTask.taskIdentifier,location.absoluteString,self.downloadArr.count);
+    
+    self.model.downloadedUrl = location;
+    self.model.downloadState = CJDownloaded;
+    [self.downloadedArr addObject:self.model];
+    
+    [self.downloadArr removeObject:self.model];
+    if (self.downloadArr.count > 0) {
+        self.model = self.downloadArr[0];
+        self.downloadTask = self.model.downloadTask;
+        [self.model.downloadTask resume];
+        NSLog(@"开始下载 %zd",self.downloadTask.taskIdentifier);
+    }
+}
+
+///> 下载进度
+- (void)URLSession:(NSURLSession *)session downloadTask:(NSURLSessionDownloadTask *)downloadTask didWriteData:(int64_t)bytesWritten totalBytesWritten:(int64_t)totalBytesWritten totalBytesExpectedToWrite:(int64_t)totalBytesExpectedToWrite {
+    float percent = (float)totalBytesWritten/totalBytesExpectedToWrite;
+    NSLog(@"下载进度 %tu  %f",downloadTask.taskIdentifier,percent);
+    
+//    self.downloadProgress.totalUnitCount = totalBytesExpectedToWrite;
+//    self.downloadProgress.completedUnitCount = totalBytesWritten;
+}
+
+///> 下载任务已经恢复下载。
+- (void)URLSession:(NSURLSession *)session downloadTask:(NSURLSessionDownloadTask *)downloadTask didResumeAtOffset:(int64_t)fileOffset expectedTotalBytes:(int64_t)expectedTotalBytes {
+    NSLog(@"下载任务已经恢复下载。 %f",fileOffset * 1.0);
+}
+
+
+@end
+
+
+
+
+/*
 #pragma mark - NSURLSessionTaskDelegate
 - (void)URLSession:(NSURLSession *)session task:(NSURLSessionTask *)task willBeginDelayedRequest:(NSURLRequest *)request
- completionHandler:(void (^)(NSURLSessionDelayedRequestDisposition disposition, NSURLRequest * _Nullable newRequest))completionHandler {
-    NSLog(@"%s",__func__);
+completionHandler:(void (^)(NSURLSessionDelayedRequestDisposition disposition, NSURLRequest * _Nullable newRequest))completionHandler {
+    NSLog(@"NSURLSessionTaskDelegate:::通知>>延时任务被调用");
+    completionHandler(NSURLSessionDelayedRequestContinueLoading,request);
 }
 
 ///>告诉代理，在开始网络加载之前，任务正在等待，直到合适的连接可用。
@@ -138,29 +178,29 @@
 ///>告诉委托远程服务器请求HTTP重定向。
 - (void)URLSession:(NSURLSession *)session task:(NSURLSessionTask *)task
 willPerformHTTPRedirection:(NSHTTPURLResponse *)response
-        newRequest:(NSURLRequest *)request
- completionHandler:(void (^)(NSURLRequest * _Nullable))completionHandler {
+newRequest:(NSURLRequest *)request
+completionHandler:(void (^)(NSURLRequest * _Nullable))completionHandler {
     NSLog(@"%s",__func__);
 }
 
 ///>  响应来自远程服务器的认证请求，从代理请求凭证。
 - (void)URLSession:(NSURLSession *)session task:(NSURLSessionTask *)task
 didReceiveChallenge:(NSURLAuthenticationChallenge *)challenge
- completionHandler:(void (^)(NSURLSessionAuthChallengeDisposition disposition, NSURLCredential * _Nullable credential))completionHandler {
+completionHandler:(void (^)(NSURLSessionAuthChallengeDisposition disposition, NSURLCredential * _Nullable credential))completionHandler {
     NSLog(@"%s",__func__);
 }
 
 
 - (void)URLSession:(NSURLSession *)session task:(NSURLSessionTask *)task
- needNewBodyStream:(void (^)(NSInputStream * _Nullable bodyStream))completionHandler {
+needNewBodyStream:(void (^)(NSInputStream * _Nullable bodyStream))completionHandler {
     NSLog(@"%s",__func__);
 }
 
 
 ///>  定期通知代理向服务器发送主体内容的进度。(上传进度)
 - (void)URLSession:(NSURLSession *)session task:(NSURLSessionTask *)task
-   didSendBodyData:(int64_t)bytesSent
-    totalBytesSent:(int64_t)totalBytesSent
+didSendBodyData:(int64_t)bytesSent
+totalBytesSent:(int64_t)totalBytesSent
 totalBytesExpectedToSend:(int64_t)totalBytesExpectedToSend {
     NSLog(@"%s",__func__);
 }
@@ -169,6 +209,17 @@ totalBytesExpectedToSend:(int64_t)totalBytesExpectedToSend {
 - (void)URLSession:(NSURLSession *)session task:(NSURLSessionTask *)task
 didCompleteWithError:(nullable NSError *)error {
     NSLog(@"%s",__func__);
+    
+    //    self.model.downloadedUrl = location;
+    self.model.downloadState = CJDownloaded;
+    [self.downloadedArr addObject:self.model];
+    
+    [self.downloadArr removeObject:self.model];
+    if (self.downloadArr.count > 0) {
+        self.model = self.downloadArr[0];
+        [self.model.downloadTask resume];
+        NSLog(@"开始下载 %zd",self.downloadTask.taskIdentifier);
+    }
 }
 
 
@@ -176,7 +227,7 @@ didCompleteWithError:(nullable NSError *)error {
 ///> 1.收到了相应头
 - (void)URLSession:(NSURLSession *)session dataTask:(NSURLSessionDataTask *)dataTask
 didReceiveResponse:(NSURLResponse *)response
- completionHandler:(void (^)(NSURLSessionResponseDisposition disposition))completionHandler {
+completionHandler:(void (^)(NSURLSessionResponseDisposition disposition))completionHandler {
     NSLog(@"收到了相应头");
 }
 
@@ -195,50 +246,15 @@ didBecomeStreamTask:(NSURLSessionStreamTask *)streamTask {
 
 ///> 开始接收到数据
 - (void)URLSession:(NSURLSession *)session dataTask:(NSURLSessionDataTask *)dataTask
-    didReceiveData:(NSData *)data {
+didReceiveData:(NSData *)data {
     NSLog(@"开始接收到数据");
 }
 
 ///> 存数据,这里可以使用系统默认的就行，这个是要将response缓存起来
 - (void)URLSession:(NSURLSession *)session dataTask:(NSURLSessionDataTask *)dataTask
- willCacheResponse:(NSCachedURLResponse *)proposedResponse
- completionHandler:(void (^)(NSCachedURLResponse * _Nullable cachedResponse))completionHandler {
+willCacheResponse:(NSCachedURLResponse *)proposedResponse
+completionHandler:(void (^)(NSCachedURLResponse * _Nullable cachedResponse))completionHandler {
     NSLog(@"存数据,这里可以使用系统默认的就行，这个是要将response缓存起来");
 }
 
-
-
-#pragma mark - NSURLSessionDownloadDelegate
-///> 下载完成
-- (void)URLSession:(NSURLSession *)session downloadTask:(NSURLSessionDownloadTask *)downloadTask didFinishDownloadingToURL:(NSURL *)location {
-    NSLog(@"下载完成 %zd %@ downloadArr.count:%zd",self.downloadTask.taskIdentifier,location.absoluteString,self.downloadArr.count);
-    
-    self.model.downloadedUrl = location;
-    self.model.downloadState = CJDownloaded;
-    [self.downloadedArr addObject:self.model];
-    
-    [self.downloadArr removeObject:self.model];
-    if (self.downloadArr.count > 0) {
-        self.model = self.downloadArr[0];
-        [self.model.downloadTask resume];
-        NSLog(@"开始下载 %zd",self.downloadTask.taskIdentifier);
-    }
-}
-
-///> 下载进度
-- (void)URLSession:(NSURLSession *)session downloadTask:(NSURLSessionDownloadTask *)downloadTask didWriteData:(int64_t)bytesWritten totalBytesWritten:(int64_t)totalBytesWritten totalBytesExpectedToWrite:(int64_t)totalBytesExpectedToWrite {
-    float percent = (float)totalBytesWritten/totalBytesExpectedToWrite;
-    NSLog(@"下载进度 %tu  %f",downloadTask.taskIdentifier,percent);
-    
-    self.downloadProgress.totalUnitCount = totalBytesExpectedToWrite;
-    self.downloadProgress.completedUnitCount = totalBytesWritten;
-}
-
-///> 下载任务已经恢复下载。
-- (void)URLSession:(NSURLSession *)session downloadTask:(NSURLSessionDownloadTask *)downloadTask didResumeAtOffset:(int64_t)fileOffset expectedTotalBytes:(int64_t)expectedTotalBytes {
-    NSLog(@"下载任务已经恢复下载。 %f",fileOffset * 1.0);
-}
-
-
-@end
-
+*/

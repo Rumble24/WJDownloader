@@ -44,6 +44,8 @@
     
     self.window.rootViewController = tabVc;
     
+    NSLog(@"%@",NSHomeDirectory());
+    
     return YES;
 }
 
