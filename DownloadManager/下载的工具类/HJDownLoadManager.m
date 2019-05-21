@@ -64,6 +64,15 @@ NSString * const HJDownLoadManagerTaskDidCompleteNotification = @"com.cjdownoadm
     return _session;
 }
 
+- (void)continueDownload {
+    if (self.resumeData) {
+        self.downloadTask = [self.session downloadTaskWithResumeData:self.resumeData];
+        [self.downloadTask resume];
+        self.resumeData = nil;
+        NSLog(@" continueDownload ");
+    }
+}
+
 ///> 需要判断任务的各种状态 是暂停状态 那么永远暂停   再次开启app也是暂停
 - (void)downLoadWithModel:(CJDownloadModel *)model {
     
@@ -98,8 +107,8 @@ NSString * const HJDownLoadManagerTaskDidCompleteNotification = @"com.cjdownoadm
 }
 
 #pragma mark - NSURLSessionDelegate 会话失效 失败或者c完成回调方法 如果您调用invalidateAndCancel方法会话将立即调用此委托方法
-- (void)URLSession:(NSURLSession *)session didBecomeInvalidWithError:(nullable NSError *)error {
-    NSLog(@"下载失败 ------------------------------");
+//- (void)URLSession:(NSURLSession *)session didBecomeInvalidWithError:(nullable NSError *)error {
+//    NSLog(@"下载失败 ------------------------------");
 //
 //    if (error) {
 //        if ([error.userInfo objectForKey:NSURLSessionDownloadTaskResumeData]){
@@ -109,7 +118,7 @@ NSString * const HJDownLoadManagerTaskDidCompleteNotification = @"com.cjdownoadm
 //            [self.downloadTask resume];
 //        }
 //    }
-}
+//}
 /*
  只要请求的地址是HTTPS的, 就会调用这个代理方法
  我们需要在该方法中告诉系统, 是否信任服务器返回的证书  并且提供证书
@@ -200,9 +209,16 @@ NSString * const HJDownLoadManagerTaskDidCompleteNotification = @"com.cjdownoadm
 
 
 ///> 当task完成的时候调用
-//- (void)URLSession:(NSURLSession *)session task:(NSURLSessionTask *)task didCompleteWithError:(nullable NSError *)error {
-//    NSLog(@"%s",__func__);
-//}
+- (void)URLSession:(NSURLSession *)session task:(NSURLSessionTask *)task didCompleteWithError:(nullable NSError *)error {
+    if (error) {
+        // check if resume data are available
+        if ([error.userInfo objectForKey:NSURLSessionDownloadTaskResumeData]) {
+            NSData *resumeData = [error.userInfo objectForKey:NSURLSessionDownloadTaskResumeData];
+            //通过之前保存的resumeData，获取断点的NSURLSessionTask，调用resume恢复下载
+            self.resumeData = resumeData;
+        }
+    } 
+}
 
 
 

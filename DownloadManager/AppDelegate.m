@@ -46,6 +46,8 @@
     
     NSLog(@"%@",NSHomeDirectory());
     
+    [[HJDownLoadManager sharedManager]  continueDownload];
+    
     return YES;
 }
 

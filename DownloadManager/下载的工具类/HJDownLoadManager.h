@@ -30,6 +30,7 @@ FOUNDATION_EXPORT NSString * const HJDownLoadManagerTaskDidCompleteNotification;
 
 - (void)downLoadWithModel:(CJDownloadModel *)model;
 
+- (void)continueDownload;
 
 @end
 
