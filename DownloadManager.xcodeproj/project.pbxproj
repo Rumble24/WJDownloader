@@ -8,6 +8,11 @@
 
 /* Begin PBXBuildFile section */
 		9B0FEAFC229243FE009E84A5 /* CJDownloadModel.m in Sources */ = {isa = PBXBuildFile; fileRef = 9B0FEAFB229243FE009E84A5 /* CJDownloadModel.m */; };
+		9B0FEB0B2293936C009E84A5 /* ShowTableViewCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 9B0FEB0A2293936C009E84A5 /* ShowTableViewCell.m */; };
+		9B0FEB0E2293DEFD009E84A5 /* downPause@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 9B0FEB0C2293DEFD009E84A5 /* downPause@2x.png */; };
+		9B0FEB0F2293DEFD009E84A5 /* downPause@1x.png in Resources */ = {isa = PBXBuildFile; fileRef = 9B0FEB0D2293DEFD009E84A5 /* downPause@1x.png */; };
+		9B0FEB122293DF1E009E84A5 /* downPlay@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 9B0FEB102293DF1D009E84A5 /* downPlay@2x.png */; };
+		9B0FEB132293DF1E009E84A5 /* downPlay@1x.png in Resources */ = {isa = PBXBuildFile; fileRef = 9B0FEB112293DF1E009E84A5 /* downPlay@1x.png */; };
 		9B35480F2282C95A0048CD2C /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 9B35480E2282C95A0048CD2C /* AppDelegate.m */; };
 		9B3548122282C95A0048CD2C /* ViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 9B3548112282C95A0048CD2C /* ViewController.m */; };
 		9B3548152282C95A0048CD2C /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 9B3548132282C95A0048CD2C /* Main.storyboard */; };
@@ -48,6 +53,12 @@
 /* Begin PBXFileReference section */
 		9B0FEAFA229243FE009E84A5 /* CJDownloadModel.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CJDownloadModel.h; sourceTree = "<group>"; };
 		9B0FEAFB229243FE009E84A5 /* CJDownloadModel.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CJDownloadModel.m; sourceTree = "<group>"; };
+		9B0FEB092293936C009E84A5 /* ShowTableViewCell.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ShowTableViewCell.h; sourceTree = "<group>"; };
+		9B0FEB0A2293936C009E84A5 /* ShowTableViewCell.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ShowTableViewCell.m; sourceTree = "<group>"; };
+		9B0FEB0C2293DEFD009E84A5 /* downPause@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "downPause@2x.png"; sourceTree = "<group>"; };
+		9B0FEB0D2293DEFD009E84A5 /* downPause@1x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "downPause@1x.png"; sourceTree = "<group>"; };
+		9B0FEB102293DF1D009E84A5 /* downPlay@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "downPlay@2x.png"; sourceTree = "<group>"; };
+		9B0FEB112293DF1E009E84A5 /* downPlay@1x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "downPlay@1x.png"; sourceTree = "<group>"; };
 		9B35480A2282C95A0048CD2C /* DownloadManager.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = DownloadManager.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		9B35480D2282C95A0048CD2C /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
 		9B35480E2282C95A0048CD2C /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
@@ -177,6 +188,8 @@
 				9B3548112282C95A0048CD2C /* ViewController.m */,
 				9B0FEAFA229243FE009E84A5 /* CJDownloadModel.h */,
 				9B0FEAFB229243FE009E84A5 /* CJDownloadModel.m */,
+				9B0FEB092293936C009E84A5 /* ShowTableViewCell.h */,
+				9B0FEB0A2293936C009E84A5 /* ShowTableViewCell.m */,
 			);
 			path = "显示页面";
 			sourceTree = "<group>";
@@ -188,6 +201,10 @@
 				9B76CCEF228BA7FC00372D70 /* TwoViewController.m */,
 				9B76CCF1228BB14A00372D70 /* DownTableViewCell.h */,
 				9B76CCF2228BB14A00372D70 /* DownTableViewCell.m */,
+				9B0FEB0D2293DEFD009E84A5 /* downPause@1x.png */,
+				9B0FEB0C2293DEFD009E84A5 /* downPause@2x.png */,
+				9B0FEB112293DF1E009E84A5 /* downPlay@1x.png */,
+				9B0FEB102293DF1D009E84A5 /* downPlay@2x.png */,
 			);
 			path = "正在下载和等待的页面";
 			sourceTree = "<group>";
@@ -334,6 +351,10 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				9B0FEB132293DF1E009E84A5 /* downPlay@1x.png in Resources */,
+				9B0FEB0F2293DEFD009E84A5 /* downPause@1x.png in Resources */,
+				9B0FEB122293DF1E009E84A5 /* downPlay@2x.png in Resources */,
+				9B0FEB0E2293DEFD009E84A5 /* downPause@2x.png in Resources */,
 				9B35481A2282C95D0048CD2C /* LaunchScreen.storyboard in Resources */,
 				9B3548172282C95D0048CD2C /* Assets.xcassets in Resources */,
 				9B3548152282C95A0048CD2C /* Main.storyboard in Resources */,
@@ -365,6 +386,7 @@
 				9B0FEAFC229243FE009E84A5 /* CJDownloadModel.m in Sources */,
 				9B35481D2282C95D0048CD2C /* main.m in Sources */,
 				9B35480F2282C95A0048CD2C /* AppDelegate.m in Sources */,
+				9B0FEB0B2293936C009E84A5 /* ShowTableViewCell.m in Sources */,
 				9B76CD0B228BEBBC00372D70 /* AFHTTPSessionManager.m in Sources */,
 				9B76CCF0228BA7FC00372D70 /* TwoViewController.m in Sources */,
 				9B76CD0C228BEBBC00372D70 /* AFURLSessionManager.m in Sources */,

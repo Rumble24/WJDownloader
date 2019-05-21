@@ -11,6 +11,7 @@
 #import "HJDownLoadManager.h"
 #import "CJDownloadModel.h"
 #import <objc/runtime.h>
+#import "ShowTableViewCell.h"
 
 @interface ViewController ()<UITableViewDelegate,UITableViewDataSource>
 @property (nonatomic, strong) UITableView *tableView;
@@ -29,12 +30,13 @@
     
     self.navigationItem.title = @"显示页面 点击加入下载队列";
 
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(downLoadFinish) name:HJDownLoadManagerTaskDidCompleteNotification object:nil];
     
     _tableView = [[UITableView alloc]initWithFrame:CGRectMake(0, 0, self.view.frame.size.width, self.view.frame.size.height - 64 - 49) style:UITableViewStylePlain];
     _tableView.delegate = self;
     _tableView.dataSource = self;
     _tableView.rowHeight = 100;
-    [_tableView registerClass:UITableViewCell.class forCellReuseIdentifier:@"ShowTableViewCell"];
+    [_tableView registerClass:ShowTableViewCell.class forCellReuseIdentifier:@"ShowTableViewCell"];
     [self.view addSubview:_tableView];
     
     _dataArr = [NSMutableArray array];
@@ -86,15 +88,18 @@
     }
 }
 
+- (void)downLoadFinish {
+    [self.tableView reloadData];
+}
+
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
     return _dataArr.count;
 }
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
-    UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:@"ShowTableViewCell" forIndexPath:indexPath];
+    ShowTableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:@"ShowTableViewCell" forIndexPath:indexPath];
     CJDownloadModel *model = _dataArr[indexPath.row];
-    cell.textLabel.text = model.title;
-    cell.detailTextLabel.text = @"点击下载";
+    cell.model = model;
     return cell;
 }
 
@@ -102,5 +107,6 @@
     CJDownloadModel *model = _dataArr[indexPath.row];
     model.downloadState = CJDownloadWaiting;
     [[HJDownLoadManager sharedManager] downLoadWithModel:model];
+    [self.tableView reloadData];
 }
 @end
