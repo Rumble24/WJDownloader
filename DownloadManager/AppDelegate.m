@@ -45,9 +45,9 @@
     self.window.rootViewController = tabVc;
     
     NSLog(@"%@",NSHomeDirectory());
-    
+
     [[HJDownLoadManager sharedManager]  continueDownload];
-    
+
     return YES;
 }
 
