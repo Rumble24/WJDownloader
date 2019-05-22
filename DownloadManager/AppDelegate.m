@@ -22,6 +22,8 @@
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
 
+    [[HJDownLoadManager sharedManager] unArchiveData];
+    
     // 将引导页设置为跟视图控制器
     self.window = [[UIWindow alloc]initWithFrame:[[UIScreen mainScreen]bounds]];
     self.window.backgroundColor = [UIColor whiteColor];
@@ -46,12 +48,11 @@
     
     NSLog(@"%@",NSHomeDirectory());
 
-    [[HJDownLoadManager sharedManager]  continueDownload];
-
     return YES;
 }
 
 - (void)application:(UIApplication *)application handleEventsForBackgroundURLSession:(NSString *)identifier completionHandler:(void (^)(void))completionHandler {
+    NSLog(@"%s",__func__);
     [HJDownLoadManager sharedManager].backgroundSessionCompletionHandler = completionHandler;
 }
 
@@ -83,7 +84,9 @@
 
 - (void)applicationWillTerminate:(UIApplication *)application {
     // Called when the application is about to terminate. Save data if appropriate. See also applicationDidEnterBackground:.
-//    NSLog(@"%s",__func__);
+    NSLog(@"%s",__func__);
+    
+    [[HJDownLoadManager sharedManager] archiveData];
 }
 
 + (AppDelegate*)sharedInstance {

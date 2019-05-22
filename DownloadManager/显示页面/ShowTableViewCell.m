@@ -7,6 +7,7 @@
 //
 
 #import "ShowTableViewCell.h"
+#import "HJDownLoadManager.h"
 
 #define kH [[UIScreen mainScreen] bounds].size.height
 #define kW [[UIScreen mainScreen] bounds].size.width
@@ -39,6 +40,8 @@
 - (void)setModel:(CJDownloadModel *)model {
     _model = model;
     _titleLable.text = model.title;
+    
+    model.downloadState = [[HJDownLoadManager sharedManager] getDownloadStateWithModel:model];
     
     switch (model.downloadState) {
         case CJDownloadNone:

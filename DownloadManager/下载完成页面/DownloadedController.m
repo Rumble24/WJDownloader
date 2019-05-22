@@ -7,26 +7,55 @@
 //
 
 #import "DownloadedController.h"
+#import "HJDownLoadManager.h"
 
-@interface DownloadedController ()
-
+@interface DownloadedController ()<UITableViewDelegate,UITableViewDataSource>
+@property (nonatomic, strong) UITableView *tableView;
 @end
+
 
 @implementation DownloadedController
 
+- (void)viewWillAppear:(BOOL)animated {
+    [super viewWillAppear:animated];
+    
+    [self.tableView reloadData];
+}
+
 - (void)viewDidLoad {
     [super viewDidLoad];
-    self.view.backgroundColor = [UIColor lightGrayColor];    
+    self.view.backgroundColor = [UIColor whiteColor];
+    self.navigationItem.title = @"下载页面";
+    
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(downLoadFinish) name:HJDownLoadManagerTaskDidCompleteNotification object:nil];
+    
+    _tableView = [[UITableView alloc]initWithFrame:CGRectMake(0, 0, self.view.frame.size.width, self.view.frame.size.height - 64 - 49) style:UITableViewStylePlain];
+    _tableView.delegate = self;
+    _tableView.dataSource = self;
+    _tableView.rowHeight = 100;
+    [_tableView registerClass:UITableViewCell.class forCellReuseIdentifier:@"ShowTableViewCell11"];
+    [self.view addSubview:_tableView];
 }
 
-/*
-#pragma mark - Navigation
 
-// In a storyboard-based application, you will often want to do a little preparation before navigation
-- (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender {
-    // Get the new view controller using [segue destinationViewController].
-    // Pass the selected object to the new view controller.
+- (void)downLoadFinish {
+    [self.tableView reloadData];
 }
-*/
 
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
+    
+    NSLog(@"%@",[HJDownLoadManager sharedManager].downloadedArr);
+    return [HJDownLoadManager sharedManager].downloadedArr.count;
+}
+
+- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
+    UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:@"ShowTableViewCell11" forIndexPath:indexPath];
+    CJDownloadModel *model = [HJDownLoadManager sharedManager].downloadedArr[indexPath.row];
+    cell.detailTextLabel.text = model.title;
+    return cell;
+}
+
+- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
+    
+}
 @end

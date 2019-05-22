@@ -33,6 +33,7 @@
     [self.contentView addSubview:_label];
     
     _button = [UIButton buttonWithType:UIButtonTypeCustom];
+    _button.frame = CGRectMake(kW / 2.0, 50, kW / 2.0, 50);
     _button.backgroundColor = [UIColor lightGrayColor];
     [_button setImage:[UIImage imageNamed:@"downPlay"] forState:UIControlStateNormal];
     [_button setImage:[UIImage imageNamed:@"downPause"] forState:UIControlStateSelected];

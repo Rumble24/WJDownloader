@@ -18,7 +18,7 @@ typedef NS_ENUM(NSUInteger, CJDownloadState) {
     CJDownloaded,
 };
 
-@interface CJDownloadModel : NSObject
+@interface CJDownloadModel : NSObject<NSCoding>
 
 @property (nonatomic, strong) NSString *title;
 
@@ -26,7 +26,9 @@ typedef NS_ENUM(NSUInteger, CJDownloadState) {
 @property (nonatomic, strong) NSString *downloadStr;
 
 ///> 下载完成的地址
-@property (nonatomic, strong) NSURL *downloadedUrl;
+@property (nonatomic, strong) NSString *downloadedStr;
+
+@property (nonatomic, strong) NSString *fileType;
 
 @property (nonatomic, strong) NSString *imageName;
 

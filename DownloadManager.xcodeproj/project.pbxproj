@@ -13,6 +13,7 @@
 		9B0FEB0F2293DEFD009E84A5 /* downPause@1x.png in Resources */ = {isa = PBXBuildFile; fileRef = 9B0FEB0D2293DEFD009E84A5 /* downPause@1x.png */; };
 		9B0FEB122293DF1E009E84A5 /* downPlay@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 9B0FEB102293DF1D009E84A5 /* downPlay@2x.png */; };
 		9B0FEB132293DF1E009E84A5 /* downPlay@1x.png in Resources */ = {isa = PBXBuildFile; fileRef = 9B0FEB112293DF1E009E84A5 /* downPlay@1x.png */; };
+		9B0FEB1622953863009E84A5 /* HJDownLoadTool.m in Sources */ = {isa = PBXBuildFile; fileRef = 9B0FEB1522953863009E84A5 /* HJDownLoadTool.m */; };
 		9B35480F2282C95A0048CD2C /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 9B35480E2282C95A0048CD2C /* AppDelegate.m */; };
 		9B3548122282C95A0048CD2C /* ViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 9B3548112282C95A0048CD2C /* ViewController.m */; };
 		9B3548152282C95A0048CD2C /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 9B3548132282C95A0048CD2C /* Main.storyboard */; };
@@ -59,6 +60,8 @@
 		9B0FEB0D2293DEFD009E84A5 /* downPause@1x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "downPause@1x.png"; sourceTree = "<group>"; };
 		9B0FEB102293DF1D009E84A5 /* downPlay@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "downPlay@2x.png"; sourceTree = "<group>"; };
 		9B0FEB112293DF1E009E84A5 /* downPlay@1x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "downPlay@1x.png"; sourceTree = "<group>"; };
+		9B0FEB1422953863009E84A5 /* HJDownLoadTool.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = HJDownLoadTool.h; sourceTree = "<group>"; };
+		9B0FEB1522953863009E84A5 /* HJDownLoadTool.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = HJDownLoadTool.m; sourceTree = "<group>"; };
 		9B35480A2282C95A0048CD2C /* DownloadManager.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = DownloadManager.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		9B35480D2282C95A0048CD2C /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
 		9B35480E2282C95A0048CD2C /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
@@ -212,6 +215,8 @@
 		9B76CCF6228BB17C00372D70 /* 下载的工具类 */ = {
 			isa = PBXGroup;
 			children = (
+				9B0FEB1422953863009E84A5 /* HJDownLoadTool.h */,
+				9B0FEB1522953863009E84A5 /* HJDownLoadTool.m */,
 				9BD64BDF22840B7400AB2F0D /* HJDownLoadManager.h */,
 				9BD64BE022840B7400AB2F0D /* HJDownLoadManager.m */,
 			);
@@ -385,6 +390,7 @@
 				9B3548122282C95A0048CD2C /* ViewController.m in Sources */,
 				9B0FEAFC229243FE009E84A5 /* CJDownloadModel.m in Sources */,
 				9B35481D2282C95D0048CD2C /* main.m in Sources */,
+				9B0FEB1622953863009E84A5 /* HJDownLoadTool.m in Sources */,
 				9B35480F2282C95A0048CD2C /* AppDelegate.m in Sources */,
 				9B0FEB0B2293936C009E84A5 /* ShowTableViewCell.m in Sources */,
 				9B76CD0B228BEBBC00372D70 /* AFHTTPSessionManager.m in Sources */,

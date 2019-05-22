@@ -12,6 +12,7 @@
 #import "CJDownloadModel.h"
 #import <objc/runtime.h>
 #import "ShowTableViewCell.h"
+#import "HJDownLoadTool.h"
 
 @interface ViewController ()<UITableViewDelegate,UITableViewDataSource>
 @property (nonatomic, strong) UITableView *tableView;

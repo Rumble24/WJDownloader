@@ -54,11 +54,4 @@
     return cell;
 }
 
-//- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
-//    CJDownloadModel *model = [HJDownLoadManager sharedManager].downloadArr[indexPath.row];
-//    model.downloadState = CJDownloadWaiting;
-//    [[HJDownLoadManager sharedManager] downLoadWithModel:model];
-//    [self.tableView reloadData];
-//}
-
 @end

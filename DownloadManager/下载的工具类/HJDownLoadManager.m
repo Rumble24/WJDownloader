@@ -16,7 +16,6 @@ NSString * const HJDownLoadManagerTaskDidCompleteNotification = @"com.cjdownoadm
 @interface HJDownLoadManager ()<NSURLSessionDelegate,NSURLSessionDownloadDelegate>
 @property (nonatomic, strong) NSURLSessionConfiguration *sessionConfiguration;
 @property (nonatomic, strong) NSURLSession *session;
-@property (nonatomic, strong) NSURLSessionDownloadTask *downloadTask;
 @property (nonatomic, strong) NSOperationQueue *operationQueue;
 @property (nonatomic, strong) NSMutableArray *downloadingArr;
 @property (nonatomic, strong) NSData *resumeData;
@@ -37,41 +36,24 @@ NSString * const HJDownLoadManagerTaskDidCompleteNotification = @"com.cjdownoadm
 
 - (instancetype)init {
     self = [super init];
-    
-    _downloadArr = [NSMutableArray array];
+
     
     ///> 设置为可以后台下载
     self.sessionConfiguration = [NSURLSessionConfiguration backgroundSessionConfigurationWithIdentifier:@"com.hjDownLoadManager"];
     ///> https://www.jianshu.com/p/a8f1f7353e7f
     ///> iOS对于同一个IP服务器的并发最大为4，OS X为6。即使设置很多的session也只是用一个
-    self.sessionConfiguration.HTTPMaximumConnectionsPerHost = 1;
+//    self.sessionConfiguration.HTTPMaximumConnectionsPerHost = 1;
     ///> 允许蜂窝下载
     self.sessionConfiguration.allowsCellularAccess = YES;
-    
+
     ///> 意思是代理回调在 子线程中完成
     self.operationQueue = [[NSOperationQueue alloc]init];
-    self.operationQueue.maxConcurrentOperationCount = 1;
+//    self.operationQueue.maxConcurrentOperationCount = 1;
 
+    self.session = [NSURLSession sessionWithConfiguration:self.sessionConfiguration delegate:self delegateQueue:self.operationQueue];
     return self;
 }
 
-- (NSURLSession *)session {
-    @synchronized (self) {
-        if (!_session) {
-            _session = [NSURLSession sessionWithConfiguration:self.sessionConfiguration delegate:self delegateQueue:self.operationQueue];
-        }
-    }
-    return _session;
-}
-
-- (void)continueDownload {
-    if (self.resumeData) {
-        self.downloadTask = [self.session downloadTaskWithResumeData:self.resumeData];
-        [self.downloadTask resume];
-        self.resumeData = nil;
-        NSLog(@" continueDownload ");
-    }
-}
 
 ///> 需要判断任务的各种状态 是暂停状态 那么永远暂停   再次开启app也是暂停
 - (void)downLoadWithModel:(CJDownloadModel *)model {
@@ -85,10 +67,9 @@ NSString * const HJDownLoadManagerTaskDidCompleteNotification = @"com.cjdownoadm
     
     if (self.downloadArr.count == 0) {
         self.model = model;
-        self.downloadTask = model.downloadTask;
-        model.downloadState = CJDownloading;
-        [model.downloadTask suspend];
-        NSLog(@"开始下载 %zd",self.downloadTask.taskIdentifier);
+        self.model.downloadState = CJDownloading;
+        [self.model.downloadTask resume];
+        NSLog(@"开始下载 %zd",self.model.downloadTask.taskIdentifier);
     } else {
         NSLog(@"加入下载队列 %zd",model.downloadTask.taskIdentifier);
     }
@@ -96,7 +77,7 @@ NSString * const HJDownLoadManagerTaskDidCompleteNotification = @"com.cjdownoadm
     [self.downloadArr addObject:model];
 }
 
-
+#pragma mark - 工具方法
 - (BOOL)downloadArrContainsModel:(CJDownloadModel *)model {
     for (CJDownloadModel *aModel in self.downloadArr) {
         if ([model.downloadStr isEqualToString:aModel.downloadStr]) {
@@ -106,83 +87,92 @@ NSString * const HJDownLoadManagerTaskDidCompleteNotification = @"com.cjdownoadm
     return NO;
 }
 
+- (CJDownloadModel *)getDownloadModelWithDownloadUrl:(NSString *)downStr {
+    for (CJDownloadModel *aModel in self.downloadArr) {
+        if ([downStr isEqualToString:aModel.downloadStr]) {
+            return aModel;
+        }
+    }
+    return nil;
+}
+
+
+- (void)archiveData {
+    NSString *path = [NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES) firstObject];
+    NSString *filename = [path stringByAppendingPathComponent:@"archiveDownloadArr"];
+    BOOL isarchiveSucess = [NSKeyedArchiver archiveRootObject:_downloadArr toFile:filename];
+    NSLog(@"archive  %d",isarchiveSucess);
+    
+    NSString *downloadedName = [path stringByAppendingPathComponent:@"archiveDownloadedArr"];
+    BOOL isArchiveDownloadedSucess = [NSKeyedArchiver archiveRootObject:_downloadedArr toFile:downloadedName];
+    NSLog(@"archive  %d",isArchiveDownloadedSucess);
+}
+
+- (void)unArchiveData {
+    NSString *path = [NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES) firstObject];
+    NSString *unArchiveDownloadArrPath = [path stringByAppendingPathComponent:@"archiveDownloadArr"];
+    NSArray *unArchiveDownloadArr = [NSKeyedUnarchiver unarchiveObjectWithFile:unArchiveDownloadArrPath];
+    if (unArchiveDownloadArr) {
+        self.downloadArr = unArchiveDownloadArr.mutableCopy;
+    } else {
+        self.downloadArr = [NSMutableArray array];
+    }
+    
+    NSLog(@"unArchiveArr: %@",self.downloadArr);
+    
+    NSString *unArchiveDownloadedArrPath = [path stringByAppendingPathComponent:@"archiveDownloadedArr"];
+    NSArray *unArchiveDownloadedArr = [NSKeyedUnarchiver unarchiveObjectWithFile:unArchiveDownloadedArrPath];
+    if (unArchiveDownloadedArr) {
+        self.downloadedArr = unArchiveDownloadedArr.mutableCopy;
+    } else {
+        self.downloadedArr = [NSMutableArray array];
+    }
+    NSLog(@"unArchiveArr: %@",self.downloadedArr);
+}
+
+
+- (CJDownloadState)getDownloadStateWithModel:(CJDownloadModel *)model {
+    for (CJDownloadModel *aModel in self.downloadArr) {
+        if ([model.downloadStr isEqualToString:aModel.downloadStr]) {
+            return aModel.downloadState;
+        }
+    }
+    for (CJDownloadModel *aModel in self.downloadedArr) {
+        if ([model.downloadStr isEqualToString:aModel.downloadStr]) {
+            return aModel.downloadState;
+        }
+    }
+    return CJDownloadNone;
+}
+
+
 #pragma mark - NSURLSessionDelegate 会话失效 失败或者c完成回调方法 如果您调用invalidateAndCancel方法会话将立即调用此委托方法
-//- (void)URLSession:(NSURLSession *)session didBecomeInvalidWithError:(nullable NSError *)error {
-//    NSLog(@"下载失败 ------------------------------");
-//
-//    if (error) {
-//        if ([error.userInfo objectForKey:NSURLSessionDownloadTaskResumeData]){
-//            self.resumeData = [error.userInfo objectForKey:NSURLSessionDownloadTaskResumeData];
-//            self.downloadTask = [self.session downloadTaskWithResumeData:self.resumeData];
-//            NSLog(@"下载失败 -error-----error-----error----error-----error----error----error-");
-//            [self.downloadTask resume];
-//        }
-//    }
-//}
-/*
- 只要请求的地址是HTTPS的, 就会调用这个代理方法
- 我们需要在该方法中告诉系统, 是否信任服务器返回的证书  并且提供证书
- 
- HTTPS：当客户端第一次发送请求的时候，服务器会返回一个包含公钥的受保护空间（也成为证书），
- 当我们发送请求的时候，公钥会将请求加密再发送给服务器，服务器接到请求之后，用自带的私钥进行解密，如果正确再返回数据。这就是 HTTPS 的安全性所在
- 
- HTTPS:   主要是把 公钥 放到本地
- */
+
+///> 当task完成的时候调用   试试可不可以 task  resume
+- (void)URLSession:(NSURLSession *)session task:(NSURLSessionTask *)task didCompleteWithError:(nullable NSError *)error {
+    NSLog(@" 当task完成的时候调用 %tu  %tu",task.taskIdentifier,self.model.downloadTask.taskIdentifier);
+    if (error) {
+        if ([error.userInfo objectForKey:NSURLSessionDownloadTaskResumeData]) {
+            NSData *resumeData = [error.userInfo objectForKey:NSURLSessionDownloadTaskResumeData];
+            
+            self.model = [self getDownloadModelWithDownloadUrl:task.currentRequest.URL.absoluteString];
+            
+            if (self.model) {
+                self.model.downloadTask = [self.session downloadTaskWithResumeData:resumeData];
+                [self.model.downloadTask resume];
+                NSLog(@"断点下载：URL:%@",self.model.downloadTask.currentRequest.URL.absoluteString);
+            }
+        }
+    }
+}
+
+
+///> 只要请求的地址是HTTPS的, 就会调用这个代理方法
 - (void)URLSession:(NSURLSession *)session didReceiveChallenge:(NSURLAuthenticationChallenge *)challenge
  completionHandler:(void (^)(NSURLSessionAuthChallengeDisposition disposition, NSURLCredential * _Nullable credential))completionHandler {
 
-    
-    /*
-     服务器的认证方法  authenticationMethod
-     
-     NSURLProtectionSpaceHTTP                     ///> HTTP协议
-     NSURLProtectionSpaceHTTPS                    ///> HTTPS协议
-     NSURLProtectionSpaceFTP                      ///> FTP协议
-     
-     NSURLProtectionSpaceHTTPProxy                ///> http代理的代理类型
-     NSURLProtectionSpaceHTTPSProxy               ///> HTTPS代理的代理类型
-     NSURLProtectionSpaceFTPProxy                 ///> FTP代理的代理类型
-     NSURLProtectionSpaceSOCKSProxy               ///> SOCKS代理的代理类型
-     
-     NSURLAuthenticationMethodDefault             ///> 协议的默认身份验证方法
-     NSURLAuthenticationMethodHTTPBasic           ///> HTTP基本身份验证。相当于http的NSURLAuthenticationMethodDefault
-     需要一个用户名和密码。使用  [NSURLCredential credentialWithUser:@"" password:@"" persistence:@""]
-     
-     NSURLAuthenticationMethodHTTPDigest          ///> HTTP摘要身份验证。使用
-     credentialWithUser:password:persistence:方法创建NSURLCredential对象
-     
-     
-     NSURLAuthenticationMethodHTMLForm            ///> HTML表单认证。适用于任何协议   基于用户名/密码的认证
-     NSURLAuthenticationMethodNTLM                ///> NTLM身份验证。              基于用户名/密码的认证
-     NSURLAuthenticationMethodNegotiate           ///> 协商认证                    基于用户名/密码的认证
-     
-     
-     上面的认证好像都需要用户名和密码
-     
-     
-     NSURLAuthenticationMethodClientCertificate   ///> SSL客户端证书。适用于任何协议。
-     需要system identity和需要与server进行身份验证的所有证书。使用credentialWithIdentity:certificates:persistence:创建NSURLCredential对象
-     
-     
-     NSURLAuthenticationMethodServerTrust         ///> 需要SecTrustRef验证。适用于任何协议
-     需要authentication challenge的protection space提供一个trust。使用credentialForTrust:来创建NSURLCredential对象。
-     */
-    
-    
+    NSLog(@"服务器要求验证客户端身份 ");
 
-    /*
-     NSURLSessionAuthChallengeDisposition
-     
-     对于 NSURLConnection 和 NSURLDownload，在[challenge sender] 上调用continueWithoutCredentialsForAuthenticationChallenge:方法。不提供证书的话，可能会导致连接失败，调用connectionDidFailWithError:方法 ，或者会返回一个不需要验证身份的替代的URL
-
-    NSURLSessionAuthChallengeUseCredential = 0,                   ///> 提供证书
-    NSURLSessionAuthChallengePerformDefaultHandling = 1,          ///> 处理请求，就好像代理没有提供一个代理方法来处理认证请求
-    NSURLSessionAuthChallengeCancelAuthenticationChallenge = 2,   ///> 整个请求将被取消;忽略凭据参数
-    NSURLSessionAuthChallengeRejectProtectionSpace = 3,           ///> 拒接认证请求
-    
-     */
-    
-    
     // 1.从服务器返回的受保护空间中拿到证书的类型  获取服务器的认证方法 服务器的认证方法
     NSString *method = challenge.protectionSpace.authenticationMethod;
     
@@ -190,13 +180,10 @@ NSString * const HJDownLoadManagerTaskDidCompleteNotification = @"com.cjdownoadm
     if([method isEqualToString:NSURLAuthenticationMethodServerTrust]){
         // 3.根据服务器返回的受保护空间创建一个证书
         NSURLCredential *credential = [NSURLCredential credentialForTrust:challenge.protectionSpace.serverTrust];
-        
         // 4.安装证书
         completionHandler(NSURLSessionAuthChallengeUseCredential, credential);
         return;
     }
-    
-    NSLog(@"服务器要求验证客户端身份 ");
 }
 
 ///> 这个方法在我们写后台下载的Demo中我们是会遇到的
@@ -207,44 +194,32 @@ NSString * const HJDownLoadManagerTaskDidCompleteNotification = @"com.cjdownoadm
     NSLog(@"%s",__func__);
 }
 
-
-///> 当task完成的时候调用
-- (void)URLSession:(NSURLSession *)session task:(NSURLSessionTask *)task didCompleteWithError:(nullable NSError *)error {
-    if (error) {
-        // check if resume data are available
-        if ([error.userInfo objectForKey:NSURLSessionDownloadTaskResumeData]) {
-            NSData *resumeData = [error.userInfo objectForKey:NSURLSessionDownloadTaskResumeData];
-            //通过之前保存的resumeData，获取断点的NSURLSessionTask，调用resume恢复下载
-            self.resumeData = resumeData;
-        }
-    } 
-}
-
-
-
 #pragma mark - NSURLSessionDownloadDelegate
 ///> 下载完成
 - (void)URLSession:(NSURLSession *)session downloadTask:(NSURLSessionDownloadTask *)downloadTask didFinishDownloadingToURL:(NSURL *)location {
-    
-    NSLog(@"下载完成 %zd %@ downloadArr.count:%zd",self.downloadTask.taskIdentifier,location.absoluteString,self.downloadArr.count);
-    
+
     dispatch_async(dispatch_get_main_queue(), ^{
         
-        if (downloadTask.taskIdentifier != self.downloadTask.taskIdentifier) return;
+        if (downloadTask.taskIdentifier != self.model.downloadTask.taskIdentifier) return;
         
-        self.model.downloadedUrl = location;
+        NSString *finalLocation = [[NSSearchPathForDirectoriesInDomains(NSDocumentDirectory , NSUserDomainMask, YES) lastObject] stringByAppendingPathComponent:[NSString stringWithFormat:@"%@,%@",self.model.downloadedStr,self.model.fileType]];
+        [[NSFileManager defaultManager] moveItemAtPath:[location path] toPath:finalLocation error:nil];
+        
+        NSLog(@"下载完成 %@ %@",finalLocation,self.model.title);
+        
+        self.model.downloadedStr = finalLocation;
         self.model.downloadState = CJDownloaded;
         [self.downloadedArr addObject:self.model];
-        
-        [[NSNotificationCenter defaultCenter] postNotificationName:HJDownLoadManagerTaskDidCompleteNotification object:self.model];
-        
         [self.downloadArr removeObject:self.model];
+        
         if (self.downloadArr.count > 0) {
             self.model = self.downloadArr[0];
-            self.downloadTask = self.model.downloadTask;
+            self.model.downloadState = CJDownloading;
             [self.model.downloadTask resume];
-            NSLog(@"开始下载 %zd",self.downloadTask.taskIdentifier);
+            NSLog(@"开始下载 %zd",self.model.downloadTask.taskIdentifier);
         }
+        
+        [[NSNotificationCenter defaultCenter] postNotificationName:HJDownLoadManagerTaskDidCompleteNotification object:self.model];
     });
 }
 
@@ -255,7 +230,7 @@ NSString * const HJDownLoadManagerTaskDidCompleteNotification = @"com.cjdownoadm
     NSLog(@"下载进度 %tu  %f",downloadTask.taskIdentifier,percent);
 
     dispatch_async(dispatch_get_main_queue(), ^{
-        if (downloadTask.taskIdentifier == self.downloadTask.taskIdentifier) {
+        if (downloadTask.taskIdentifier == self.model.downloadTask.taskIdentifier) {
             
             if (self.downloadProgressBlock) {
                 self.downloadProgressBlock(percent);
@@ -267,11 +242,64 @@ NSString * const HJDownLoadManagerTaskDidCompleteNotification = @"com.cjdownoadm
 
 ///> 下载任务已经恢复下载。
 - (void)URLSession:(NSURLSession *)session downloadTask:(NSURLSessionDownloadTask *)downloadTask didResumeAtOffset:(int64_t)fileOffset expectedTotalBytes:(int64_t)expectedTotalBytes {
-    NSLog(@"下载任务已经恢复下载。 %f",fileOffset * 1.0);
+    NSLog(@"下载任务已经恢复下载。 %f   downloadTask:%tu  self.downloadTask:%tu 下载的地址：%@",fileOffset * 1.0,downloadTask.taskIdentifier,self.model.downloadTask.taskIdentifier,downloadTask.currentRequest.URL.absoluteString);
 }
 
 
+
 @end
+
+
+
+/*
+ 服务器的认证方法  authenticationMethod
+ 
+ NSURLProtectionSpaceHTTP                     ///> HTTP协议
+ NSURLProtectionSpaceHTTPS                    ///> HTTPS协议
+ NSURLProtectionSpaceFTP                      ///> FTP协议
+ 
+ NSURLProtectionSpaceHTTPProxy                ///> http代理的代理类型
+ NSURLProtectionSpaceHTTPSProxy               ///> HTTPS代理的代理类型
+ NSURLProtectionSpaceFTPProxy                 ///> FTP代理的代理类型
+ NSURLProtectionSpaceSOCKSProxy               ///> SOCKS代理的代理类型
+ 
+ NSURLAuthenticationMethodDefault             ///> 协议的默认身份验证方法
+ NSURLAuthenticationMethodHTTPBasic           ///> HTTP基本身份验证。相当于http的NSURLAuthenticationMethodDefault
+ 需要一个用户名和密码。使用  [NSURLCredential credentialWithUser:@"" password:@"" persistence:@""]
+ 
+ NSURLAuthenticationMethodHTTPDigest          ///> HTTP摘要身份验证。使用
+ credentialWithUser:password:persistence:方法创建NSURLCredential对象
+ 
+ 
+ NSURLAuthenticationMethodHTMLForm            ///> HTML表单认证。适用于任何协议   基于用户名/密码的认证
+ NSURLAuthenticationMethodNTLM                ///> NTLM身份验证。              基于用户名/密码的认证
+ NSURLAuthenticationMethodNegotiate           ///> 协商认证                    基于用户名/密码的认证
+ 
+ 
+ 上面的认证好像都需要用户名和密码
+ 
+ 
+ NSURLAuthenticationMethodClientCertificate   ///> SSL客户端证书。适用于任何协议。
+ 需要system identity和需要与server进行身份验证的所有证书。使用credentialWithIdentity:certificates:persistence:创建NSURLCredential对象
+ 
+ 
+ NSURLAuthenticationMethodServerTrust         ///> 需要SecTrustRef验证。适用于任何协议
+ 需要authentication challenge的protection space提供一个trust。使用credentialForTrust:来创建NSURLCredential对象。
+ */
+
+
+
+/*
+ NSURLSessionAuthChallengeDisposition
+ 
+ 对于 NSURLConnection 和 NSURLDownload，在[challenge sender] 上调用continueWithoutCredentialsForAuthenticationChallenge:方法。不提供证书的话，可能会导致连接失败，调用connectionDidFailWithError:方法 ，或者会返回一个不需要验证身份的替代的URL
+ 
+ NSURLSessionAuthChallengeUseCredential = 0,                   ///> 提供证书
+ NSURLSessionAuthChallengePerformDefaultHandling = 1,          ///> 处理请求，就好像代理没有提供一个代理方法来处理认证请求
+ NSURLSessionAuthChallengeCancelAuthenticationChallenge = 2,   ///> 整个请求将被取消;忽略凭据参数
+ NSURLSessionAuthChallengeRejectProtectionSpace = 3,           ///> 拒接认证请求
+ 
+ */
 
 /*
 #pragma mark - NSURLSessionTaskDelegate
@@ -305,6 +333,8 @@ completionHandler:(void (^)(NSURLSessionAuthChallengeDisposition disposition, NS
 needNewBodyStream:(void (^)(NSInputStream * _Nullable bodyStream))completionHandler {
     NSLog(@"%s",__func__);
 }
+
+
 
 
 ///>  定期通知代理向服务器发送主体内容的进度。(上传进度)
