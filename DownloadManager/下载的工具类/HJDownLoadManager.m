@@ -11,6 +11,9 @@
 
 #import "HJDownLoadManager.h"
 
+// 视频文件
+#define VIDEO  [NSHomeDirectory()  stringByAppendingString:@"/Documents/视频"]
+
 NSString * const HJDownLoadManagerTaskDidCompleteNotification = @"com.cjdownoadmanager.networking.task.complete";
 
 @interface HJDownLoadManager ()<NSURLSessionDelegate,NSURLSessionDownloadDelegate>
@@ -36,7 +39,6 @@ NSString * const HJDownLoadManagerTaskDidCompleteNotification = @"com.cjdownoadm
 
 - (instancetype)init {
     self = [super init];
-
     
     ///> 设置为可以后台下载
     self.sessionConfiguration = [NSURLSessionConfiguration backgroundSessionConfigurationWithIdentifier:@"com.hjDownLoadManager"];
@@ -51,6 +53,8 @@ NSString * const HJDownLoadManagerTaskDidCompleteNotification = @"com.cjdownoadm
 //    self.operationQueue.maxConcurrentOperationCount = 1;
 
     self.session = [NSURLSession sessionWithConfiguration:self.sessionConfiguration delegate:self delegateQueue:self.operationQueue];
+    
+    [[NSFileManager defaultManager] createDirectoryAtPath:VIDEO withIntermediateDirectories:YES attributes:nil error:nil];
     return self;
 }
 
@@ -63,10 +67,9 @@ NSString * const HJDownLoadManagerTaskDidCompleteNotification = @"com.cjdownoadm
         return;
     }
     
-    model.downloadTask = [self.session downloadTaskWithRequest:[NSURLRequest requestWithURL:[NSURL URLWithString:model.downloadStr]]];
-    
     if (self.downloadArr.count == 0) {
         self.model = model;
+        self.model.downloadTask = [self.session downloadTaskWithRequest:[NSURLRequest requestWithURL:[NSURL URLWithString:model.downloadStr]]];
         self.model.downloadState = CJDownloading;
         [self.model.downloadTask resume];
         NSLog(@"开始下载 %zd",self.model.downloadTask.taskIdentifier);
@@ -75,6 +78,7 @@ NSString * const HJDownLoadManagerTaskDidCompleteNotification = @"com.cjdownoadm
     }
     
     [self.downloadArr addObject:model];
+    [self archiveData];
 }
 
 #pragma mark - 工具方法
@@ -96,16 +100,19 @@ NSString * const HJDownLoadManagerTaskDidCompleteNotification = @"com.cjdownoadm
     return nil;
 }
 
+- (NSString *)filePathWithModel:(CJDownloadModel *)model {
+    return [VIDEO stringByAppendingPathComponent:model.downloadedStr];
+}
 
 - (void)archiveData {
     NSString *path = [NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES) firstObject];
     NSString *filename = [path stringByAppendingPathComponent:@"archiveDownloadArr"];
     BOOL isarchiveSucess = [NSKeyedArchiver archiveRootObject:_downloadArr toFile:filename];
-    NSLog(@"archive  %d",isarchiveSucess);
+    NSLog(@"归档正下载  %d",isarchiveSucess);
     
     NSString *downloadedName = [path stringByAppendingPathComponent:@"archiveDownloadedArr"];
     BOOL isArchiveDownloadedSucess = [NSKeyedArchiver archiveRootObject:_downloadedArr toFile:downloadedName];
-    NSLog(@"archive  %d",isArchiveDownloadedSucess);
+    NSLog(@"归档已下载  %d",isArchiveDownloadedSucess);
 }
 
 - (void)unArchiveData {
@@ -145,12 +152,96 @@ NSString * const HJDownLoadManagerTaskDidCompleteNotification = @"com.cjdownoadm
     return CJDownloadNone;
 }
 
+- (void)delegateDownloadingModel:(CJDownloadModel *)model {
+    CJDownloadModel *tempModel;
+    for (CJDownloadModel *aModel in self.downloadArr) {
+        if ([model.downloadStr isEqualToString:aModel.downloadStr]) {
+            tempModel = aModel;
+            break;
+        }
+    }
+    model.downloadState = CJDownloadNone;
+    if (model.downloadTask) {
+        [model.downloadTask cancel];
+    }    
+    [self.downloadArr removeObject:tempModel];
+    [self archiveData];
+    [self continueDownload];
+}
+
+///> 还要删除已经下载完的东西
+- (void)delegateDownloadedModel:(CJDownloadModel *)model {
+    CJDownloadModel *tempModel;
+    for (CJDownloadModel *aModel in self.downloadedArr) {
+        if ([model.downloadStr isEqualToString:aModel.downloadStr]) {
+            tempModel = aModel;
+            break;
+        }
+    }
+    model.downloadState = CJDownloadNone;
+    [self.downloadedArr removeObject:tempModel];
+    [self archiveData];
+    NSString *path = [VIDEO stringByAppendingPathComponent:self.model.downloadedStr];
+    BOOL removeSuccess = [[NSFileManager defaultManager] removeItemAtPath:path error:nil];
+    NSLog(@"删除  %@  %@",model.title,removeSuccess?@"成功":@"失败");
+}
+
+
+- (void)continueDownload {
+    if (self.downloadArr.count > 0) {
+        self.model = self.downloadArr[0];
+        self.model.downloadState = CJDownloading;
+        ///> 如果是反归档出来的那么没有 downloadTask
+        if (!self.model.downloadTask) {
+            self.model.downloadTask = [self.session downloadTaskWithRequest:[NSURLRequest requestWithURL:[NSURL URLWithString:self.model.downloadStr]]];
+        }
+        [self.model.downloadTask resume];
+        NSLog(@"继续开始下载 %zd",self.model.downloadTask.taskIdentifier);
+    }
+}
+
+
+#pragma mark - NSURLSessionDownloadDelegate
+///> 下载完成
+- (void)URLSession:(NSURLSession *)session downloadTask:(NSURLSessionDownloadTask *)downloadTask didFinishDownloadingToURL:(NSURL *)location {
+    // 创建路径
+    NSString *movePath = [VIDEO stringByAppendingPathComponent:self.model.downloadedStr];
+    BOOL isS = [[NSFileManager defaultManager] moveItemAtPath:[location path]toPath:movePath error:nil];
+    NSLog(@"下载完成 %@  finalLocation:%@  location:%@ 移动:%@",self.model.title,movePath,[location path],isS?@"成功":@"失败");
+    dispatch_async(dispatch_get_main_queue(), ^{
+        self.model.downloadState = CJDownloaded;
+        [self.downloadedArr addObject:self.model];
+        [self.downloadArr removeObject:self.model];
+        [self continueDownload];
+        [[NSNotificationCenter defaultCenter] postNotificationName:HJDownLoadManagerTaskDidCompleteNotification object:self.model];
+        [self archiveData];
+    });
+}
+
+///> 下载进度
+- (void)URLSession:(NSURLSession *)session downloadTask:(NSURLSessionDownloadTask *)downloadTask didWriteData:(int64_t)bytesWritten totalBytesWritten:(int64_t)totalBytesWritten totalBytesExpectedToWrite:(int64_t)totalBytesExpectedToWrite {
+    float percent = (float)totalBytesWritten/totalBytesExpectedToWrite;
+    NSLog(@"下载进度 %tu  %f",downloadTask.taskIdentifier,percent);
+    dispatch_async(dispatch_get_main_queue(), ^{
+        if (downloadTask.taskIdentifier == self.model.downloadTask.taskIdentifier) {
+            if (self.downloadProgressBlock) {
+                self.downloadProgressBlock(percent);
+            }
+        }
+    });
+}
+
+///> 下载任务已经恢复下载。
+- (void)URLSession:(NSURLSession *)session downloadTask:(NSURLSessionDownloadTask *)downloadTask didResumeAtOffset:(int64_t)fileOffset expectedTotalBytes:(int64_t)expectedTotalBytes {
+    NSLog(@"下载任务已经恢复下载。 %f   downloadTask:%tu  self.downloadTask:%tu 下载的地址：%@",fileOffset * 1.0,downloadTask.taskIdentifier,self.model.downloadTask.taskIdentifier,downloadTask.currentRequest.URL.absoluteString);
+}
+
+
 
 #pragma mark - NSURLSessionDelegate 会话失效 失败或者c完成回调方法 如果您调用invalidateAndCancel方法会话将立即调用此委托方法
-
-///> 当task完成的时候调用   试试可不可以 task  resume
+///> 当task完成的时候调用
 - (void)URLSession:(NSURLSession *)session task:(NSURLSessionTask *)task didCompleteWithError:(nullable NSError *)error {
-    NSLog(@" 当task完成的时候调用 %tu  %tu",task.taskIdentifier,self.model.downloadTask.taskIdentifier);
+    NSLog(@" 当task完成的时候调用 %tu  ",task.taskIdentifier);
     if (error) {
         if ([error.userInfo objectForKey:NSURLSessionDownloadTaskResumeData]) {
             NSData *resumeData = [error.userInfo objectForKey:NSURLSessionDownloadTaskResumeData];
@@ -161,6 +252,8 @@ NSString * const HJDownLoadManagerTaskDidCompleteNotification = @"com.cjdownoadm
                 self.model.downloadTask = [self.session downloadTaskWithResumeData:resumeData];
                 [self.model.downloadTask resume];
                 NSLog(@"断点下载：URL:%@",self.model.downloadTask.currentRequest.URL.absoluteString);
+            } else {
+                NSLog(@"断点下载：model为空 URL:%@",task.currentRequest.URL.absoluteString);
             }
         }
     }
@@ -170,9 +263,9 @@ NSString * const HJDownLoadManagerTaskDidCompleteNotification = @"com.cjdownoadm
 ///> 只要请求的地址是HTTPS的, 就会调用这个代理方法
 - (void)URLSession:(NSURLSession *)session didReceiveChallenge:(NSURLAuthenticationChallenge *)challenge
  completionHandler:(void (^)(NSURLSessionAuthChallengeDisposition disposition, NSURLCredential * _Nullable credential))completionHandler {
-
+    
     NSLog(@"服务器要求验证客户端身份 ");
-
+    
     // 1.从服务器返回的受保护空间中拿到证书的类型  获取服务器的认证方法 服务器的认证方法
     NSString *method = challenge.protectionSpace.authenticationMethod;
     
@@ -193,60 +286,6 @@ NSString * const HJDownLoadManagerTaskDidCompleteNotification = @"com.cjdownoadm
     }
     NSLog(@"%s",__func__);
 }
-
-#pragma mark - NSURLSessionDownloadDelegate
-///> 下载完成
-- (void)URLSession:(NSURLSession *)session downloadTask:(NSURLSessionDownloadTask *)downloadTask didFinishDownloadingToURL:(NSURL *)location {
-
-    dispatch_async(dispatch_get_main_queue(), ^{
-        
-        if (downloadTask.taskIdentifier != self.model.downloadTask.taskIdentifier) return;
-        
-        NSString *finalLocation = [[NSSearchPathForDirectoriesInDomains(NSDocumentDirectory , NSUserDomainMask, YES) lastObject] stringByAppendingPathComponent:[NSString stringWithFormat:@"%@,%@",self.model.downloadedStr,self.model.fileType]];
-        [[NSFileManager defaultManager] moveItemAtPath:[location path] toPath:finalLocation error:nil];
-        
-        NSLog(@"下载完成 %@ %@",finalLocation,self.model.title);
-        
-        self.model.downloadedStr = finalLocation;
-        self.model.downloadState = CJDownloaded;
-        [self.downloadedArr addObject:self.model];
-        [self.downloadArr removeObject:self.model];
-        
-        if (self.downloadArr.count > 0) {
-            self.model = self.downloadArr[0];
-            self.model.downloadState = CJDownloading;
-            [self.model.downloadTask resume];
-            NSLog(@"开始下载 %zd",self.model.downloadTask.taskIdentifier);
-        }
-        
-        [[NSNotificationCenter defaultCenter] postNotificationName:HJDownLoadManagerTaskDidCompleteNotification object:self.model];
-    });
-}
-
-///> 下载进度
-- (void)URLSession:(NSURLSession *)session downloadTask:(NSURLSessionDownloadTask *)downloadTask didWriteData:(int64_t)bytesWritten totalBytesWritten:(int64_t)totalBytesWritten totalBytesExpectedToWrite:(int64_t)totalBytesExpectedToWrite {
-    float percent = (float)totalBytesWritten/totalBytesExpectedToWrite;
-    
-    NSLog(@"下载进度 %tu  %f",downloadTask.taskIdentifier,percent);
-
-    dispatch_async(dispatch_get_main_queue(), ^{
-        if (downloadTask.taskIdentifier == self.model.downloadTask.taskIdentifier) {
-            
-            if (self.downloadProgressBlock) {
-                self.downloadProgressBlock(percent);
-            }
-            
-        }
-    });
-}
-
-///> 下载任务已经恢复下载。
-- (void)URLSession:(NSURLSession *)session downloadTask:(NSURLSessionDownloadTask *)downloadTask didResumeAtOffset:(int64_t)fileOffset expectedTotalBytes:(int64_t)expectedTotalBytes {
-    NSLog(@"下载任务已经恢复下载。 %f   downloadTask:%tu  self.downloadTask:%tu 下载的地址：%@",fileOffset * 1.0,downloadTask.taskIdentifier,self.model.downloadTask.taskIdentifier,downloadTask.currentRequest.URL.absoluteString);
-}
-
-
-
 @end
 
 

@@ -15,6 +15,7 @@
 @interface DownTableViewCell ()
 @property (nonatomic, strong) UIProgressView *progressView;
 @property (nonatomic, strong) UILabel *label;
+@property (nonatomic, strong) UILabel *titleLabel;
 @property (nonatomic, strong) UIButton *button;
 @end
 
@@ -28,24 +29,31 @@
     _progressView.frame = CGRectMake(10, 20, kW - 20, 30);
     [self.contentView addSubview:_progressView];
     
-    _label = [[UILabel alloc]initWithFrame:CGRectMake(0, 50, kW / 2.0, 50)];
+    _label = [[UILabel alloc]initWithFrame:CGRectMake(0, 50, kW / 3.0, 50)];
     _label.textAlignment = NSTextAlignmentCenter;
     [self.contentView addSubview:_label];
     
+    _titleLabel = [[UILabel alloc]initWithFrame:CGRectMake(kW / 3.0, 50, kW / 3.0, 50)];
+    _titleLabel.textAlignment = NSTextAlignmentCenter;
+    [self.contentView addSubview:_titleLabel];
+    
     _button = [UIButton buttonWithType:UIButtonTypeCustom];
-    _button.frame = CGRectMake(kW / 2.0, 50, kW / 2.0, 50);
+    _button.frame = CGRectMake(kW / 3.0 * 2, 50, kW / 3.0, 50);
     _button.backgroundColor = [UIColor lightGrayColor];
     [_button setImage:[UIImage imageNamed:@"downPlay"] forState:UIControlStateNormal];
     [_button setImage:[UIImage imageNamed:@"downPause"] forState:UIControlStateSelected];
     [_button addTarget:self action:@selector(buttonClick:) forControlEvents:1<<6];
     [self.contentView addSubview:_button];
 
+    self.selectionStyle = UITableViewCellSelectionStyleNone;
+    self.contentView.layer.cornerRadius = 10;
+
     return self;
 }
 
 - (void)setModel:(CJDownloadModel *)model {
     _model = model;
-    _label.text = model.title;
+    _titleLabel.text = model.title;
     
     _progressView.hidden = YES;
     
@@ -54,11 +62,12 @@
             _label.text = @"等待下载";
             break;
         case CJDownloading: {
-            _label.text = @"下载中...";
+            _label.text = @"正在下载";
             _progressView.hidden = NO;
             __weak typeof(self) weakSelf = self;
             [[HJDownLoadManager sharedManager] setDownloadProgressBlock:^(float progress) {
                 weakSelf.progressView.progress = progress;
+                weakSelf.label.text = [NSString stringWithFormat:@"%.2f%%",progress * 100];
             }];
         } break;
         case CJDownloadPause:

@@ -25,10 +25,10 @@ typedef NS_ENUM(NSUInteger, CJDownloadState) {
 ///> 下载的地址
 @property (nonatomic, strong) NSString *downloadStr;
 
-///> 下载完成的地址
+///> 下载完成的地址 名字
 @property (nonatomic, strong) NSString *downloadedStr;
 
-@property (nonatomic, strong) NSString *fileType;
+
 
 @property (nonatomic, strong) NSString *imageName;
 

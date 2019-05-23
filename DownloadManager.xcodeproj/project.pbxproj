@@ -204,10 +204,6 @@
 				9B76CCEF228BA7FC00372D70 /* TwoViewController.m */,
 				9B76CCF1228BB14A00372D70 /* DownTableViewCell.h */,
 				9B76CCF2228BB14A00372D70 /* DownTableViewCell.m */,
-				9B0FEB0D2293DEFD009E84A5 /* downPause@1x.png */,
-				9B0FEB0C2293DEFD009E84A5 /* downPause@2x.png */,
-				9B0FEB112293DF1E009E84A5 /* downPlay@1x.png */,
-				9B0FEB102293DF1D009E84A5 /* downPlay@2x.png */,
 			);
 			path = "正在下载和等待的页面";
 			sourceTree = "<group>";
@@ -235,6 +231,10 @@
 		9B76CCFB228BEBBC00372D70 /* AFNetworking */ = {
 			isa = PBXGroup;
 			children = (
+				9B0FEB0D2293DEFD009E84A5 /* downPause@1x.png */,
+				9B0FEB0C2293DEFD009E84A5 /* downPause@2x.png */,
+				9B0FEB112293DF1E009E84A5 /* downPlay@1x.png */,
+				9B0FEB102293DF1D009E84A5 /* downPlay@2x.png */,
 				9B76CD09228BEBBC00372D70 /* AFHTTPSessionManager.h */,
 				9B76CD01228BEBBC00372D70 /* AFHTTPSessionManager.m */,
 				9B76CCFE228BEBBC00372D70 /* AFURLSessionManager.h */,

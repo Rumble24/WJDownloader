@@ -33,6 +33,10 @@
     _downLable.textAlignment = NSTextAlignmentCenter;
     [self.contentView addSubview:_downLable];
     
+    self.selectionStyle = UITableViewCellSelectionStyleNone;
+    
+    self.contentView.layer.cornerRadius = 10;
+
     return self;
 }
 

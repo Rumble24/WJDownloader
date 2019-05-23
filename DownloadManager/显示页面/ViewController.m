@@ -37,6 +37,11 @@
     _tableView.delegate = self;
     _tableView.dataSource = self;
     _tableView.rowHeight = 100;
+    _tableView.separatorStyle = UITableViewCellSeparatorStyleNone;
+    
+    ///>  解决刷新的时候跳动的问题
+    _tableView.estimatedRowHeight = 0;
+    
     [_tableView registerClass:ShowTableViewCell.class forCellReuseIdentifier:@"ShowTableViewCell"];
     [self.view addSubview:_tableView];
     
@@ -48,9 +53,6 @@
     [_dataArr addObject:@{@"name":@"其他地方的 3 ",@"address":@"http://sbslive.cnrmobile.com/storage/storage2/05/61/05/f2609b3b964bbbcfb3e3703dde59a994.3gp"}];
     [_dataArr addObject:@{@"name":@"其他地方的 4 ",@"address":@"http://sbslive.cnrmobile.com/storage/storage2/28/11/28/689f8a52fbef0fbbf51db19ee3276ae5.3gp"}];
     [_dataArr addObject:@{@"name":@"其他地方的 5 ",@"address":@"http://sbslive.cnrmobile.com/storage/storage2/71/28/05/512551c6fcf71615ad5f8ae9bd524069.3gp"}];
-    
-    
-    [_dataArr addObject:@{@"name":@"其他地方的 6 ",@"address":@"http://sw.bos.baidu.com/sw-search-sp/software/797b4439e2551/QQ_mac_5.0.2.dmg"}];
     
     [_dataArr addObject:@{@"name":@"大文件",@"address":@"https://www.apple.com/105/media/cn/iphone-x/2017/01df5b43-28e4-4848-bf20-490c34a926a7/films/feature/iphone-x-feature-cn-20170912_1280x720h.mp4"}];
     [_dataArr addObject:@{@"name":@"下载地址1",@"address":@"https://asp.cntv.myalicdn.com/asp/hls/450/0303000a/3/default/c68e967a22564821a430d21a75fcd34d/450.m3u8"}];

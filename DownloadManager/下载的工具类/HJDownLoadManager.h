@@ -35,6 +35,13 @@ FOUNDATION_EXPORT NSString * const HJDownLoadManagerTaskDidCompleteNotification;
 - (void)unArchiveData;
 
 - (CJDownloadState)getDownloadStateWithModel:(CJDownloadModel *)model;
+
+- (void)delegateDownloadingModel:(CJDownloadModel *)model;
+
+- (void)delegateDownloadedModel:(CJDownloadModel *)model;
+
+- (NSString *)filePathWithModel:(CJDownloadModel *)model;
+
 @end
 
 NS_ASSUME_NONNULL_END
