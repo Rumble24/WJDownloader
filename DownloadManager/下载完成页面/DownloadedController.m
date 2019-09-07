@@ -51,7 +51,9 @@
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
     UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:@"ShowTableViewCell11" forIndexPath:indexPath];
     CJDownloadModel *model = [HJDownLoadManager sharedManager].downloadedArr[indexPath.row];
-    cell.detailTextLabel.text = model.title;
+    cell.textLabel.text = model.title;
+    
+    NSLog(@"%@",model.title);
     return cell;
 }
 

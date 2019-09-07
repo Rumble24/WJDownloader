@@ -220,6 +220,8 @@ NSString * const HJDownLoadManagerTaskDidCompleteNotification = @"com.cjdownoadm
         }
         
         [[NSNotificationCenter defaultCenter] postNotificationName:HJDownLoadManagerTaskDidCompleteNotification object:self.model];
+        
+        [[HJDownLoadManager sharedManager] archiveData];
     });
 }
 
